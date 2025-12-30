@@ -1,0 +1,5 @@
+export { AdminDashboardPage } from './DashboardPage'
+export { AdminAreaMonitoringPage } from './AreaMonitoringPage'
+export { AdminUserManagementPage } from './UserManagementPage'
+export { AdminComplaintReviewPage } from './ComplaintReviewPage'
+export { default as AuditTrailPage } from './AuditTrailPage'

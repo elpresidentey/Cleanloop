@@ -1,0 +1,183 @@
+import React, { useState } from 'react'
+import { useAuth } from '../../hooks/useAuth'
+import { PickupService } from '../../services/pickupService'
+import { CreatePickupRequestInput } from '../../types'
+
+interface PickupRequestFormProps {
+  onSuccess?: () => void
+  onCancel?: () => void
+}
+
+export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
+  onSuccess,
+  onCancel
+}) => {
+  const { profile } = useAuth()
+  const [formData, setFormData] = useState({
+    scheduledDate: '',
+    notes: ''
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    setError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!profile) {
+      setError('You must be logged in to request a pickup')
+      return
+    }
+
+    if (!formData.scheduledDate) {
+      setError('Please select a pickup date')
+      return
+    }
+
+    const selectedDate = new Date(formData.scheduledDate)
+    const now = new Date()
+    
+    if (selectedDate <= now) {
+      setError('Pickup date must be in the future')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      setError(null)
+
+      const requestInput: CreatePickupRequestInput = {
+        userId: profile.id,
+        scheduledDate: selectedDate,
+        notes: formData.notes.trim() || undefined,
+        location: profile.location
+      }
+
+      await PickupService.create(requestInput)
+      
+      // Reset form
+      setFormData({
+        scheduledDate: '',
+        notes: ''
+      })
+
+      if (onSuccess) {
+        onSuccess()
+      }
+    } catch (error) {
+      console.error('Failed to create pickup request:', error)
+      setError(error instanceof Error ? error.message : 'Failed to create pickup request')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Get minimum date (tomorrow)
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const minDate = tomorrow.toISOString().split('T')[0]
+
+  return (
+    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="px-8 py-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-6">
+          Request Pickup
+        </h3>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <p className="mt-1 text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-2">
+              Preferred Pickup Date *
+            </label>
+            <input
+              type="date"
+              id="scheduledDate"
+              name="scheduledDate"
+              value={formData.scheduledDate}
+              onChange={handleInputChange}
+              min={minDate}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Select your preferred pickup date (must be at least tomorrow)
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              Special Instructions (Optional)
+            </label>
+            <textarea
+              id="notes"
+              name="notes"
+              rows={4}
+              value={formData.notes}
+              onChange={handleInputChange}
+              maxLength={500}
+              placeholder="Any special instructions for the collector (e.g., location of waste, access instructions, etc.)"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              {formData.notes.length}/500 characters
+            </p>
+          </div>
+
+          {profile && (
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Pickup Location</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p className="font-medium">{profile.location.area}</p>
+                <p>{profile.location.street} {profile.location.houseNumber}</p>
+              </div>
+              <p className="mt-3 text-xs text-gray-500">
+                This is your registered address. To change it, please update your profile.
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-4 pt-4">
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+            >
+              {submitting ? 'Submitting...' : 'Request Pickup'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

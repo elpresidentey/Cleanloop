@@ -1,0 +1,6 @@
+export { DashboardPage } from './DashboardPage'
+export { SubscriptionPage } from './SubscriptionPage'
+export { PickupRequestPage } from './PickupRequestPage'
+export { PaymentHistoryPage } from './PaymentHistoryPage'
+export { ComplaintsPage } from './ComplaintsPage'
+export { LocationManagementPage } from './LocationManagementPage'

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Receipt Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #22c55e; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #16a34a; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>PDF Receipt Functionality Test</h1>
+    <p>This page tests the PDF generation functionality independently.</p>
+    
+    <button onclick="testPDFGeneration()">Test PDF Generation</button>
+    <button onclick="testPDFDownload()">Test PDF Download</button>
+    <button onclick="testPDFPrint()">Test PDF Print</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        
+        function addResult(message, isSuccess = true) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${isSuccess ? 'success' : 'error'}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            results.appendChild(div);
+        }
+
+        function generateTestPDF() {
+            try {
+                const doc = new jsPDF();
+                
+                // Test payment data
+                const payment = {
+                    id: 'test-' + Date.now(),
+                    amount: 5000,
+                    currency: 'NGN',
+                    paymentMethod: 'transfer',
+                    reference: 'TEST-REF-' + Date.now(),
+                    status: 'completed',
+                    createdAt: new Date()
+                };
+                
+                const userInfo = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    phone: '+234 800 TEST',
+                    address: 'Test Area, Test Street 123'
+                };
+
+                // Generate PDF content (simplified version)
+                doc.setFontSize(20);
+                doc.text('CleanLoop Payment Receipt', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.text(`Receipt ID: ${payment.id}`, 20, 50);
+                doc.text(`Date: ${payment.createdAt.toLocaleDateString()}`, 20, 60);
+                doc.text(`Customer: ${userInfo.name}`, 20, 80);
+                doc.text(`Email: ${userInfo.email}`, 20, 90);
+                doc.text(`Amount: ₦${payment.amount.toLocaleString()}`, 20, 110);
+                doc.text(`Method: ${payment.paymentMethod.toUpperCase()}`, 20, 120);
+                doc.text(`Reference: ${payment.reference}`, 20, 130);
+                doc.text(`Status: ${payment.status.toUpperCase()}`, 20, 140);
+                
+                doc.text('Thank you for choosing CleanLoop!', 20, 170);
+                
+                return doc;
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                throw error;
+            }
+        }
+
+        function testPDFGeneration() {
+            try {
+                const doc = generateTestPDF();
+                addResult('✅ PDF generation successful!');
+                return doc;
+            } catch (error) {
+                addResult(`❌ PDF generation failed: ${error.message}`, false);
+                return null;
+            }
+        }
+
+        function testPDFDownload() {
+            try {
+                const doc = generateTestPDF();
+                if (doc) {
+                    const filename = `CleanLoop_Test_Receipt_${Date.now()}.pdf`;
+                    doc.save(filename);
+                    addResult(`✅ PDF download initiated: ${filename}`);
+                }
+            } catch (error) {
+                addResult(`❌ PDF download failed: ${error.message}`, false);
+            }
+        }
+
+        function testPDFPrint() {
+            try {
+                const doc = generateTestPDF();
+                if (doc) {
+                    const blob = new Blob([doc.output('blob')], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const printWindow = window.open(url, '_blank');
+                    if (printWindow) {
+                        printWindow.onload = () => {
+                            printWindow.print();
+                            setTimeout(() => {
+                                printWindow.close();
+                                URL.revokeObjectURL(url);
+                            }, 1000);
+                        };
+                        addResult('✅ PDF print dialog opened successfully!');
+                    } else {
+                        addResult('❌ Could not open print window (popup blocked?)', false);
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ PDF print failed: ${error.message}`, false);
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = () => {
+            addResult('🚀 PDF test page loaded. jsPDF version: ' + (window.jspdf ? 'Available' : 'Not found'));
+        };
+    </script>
+</body>
+</html>

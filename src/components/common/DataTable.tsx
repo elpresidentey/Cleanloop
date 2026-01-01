@@ -62,8 +62,9 @@ export function DataTable<T extends Record<string, any>>({
   }
 
   const renderCell = (column: Column<T>, record: T) => {
-    const value = column.key.includes('.') 
-      ? column.key.split('.').reduce((obj, key) => obj?.[key], record)
+    const keyStr = String(column.key)
+    const value = keyStr.includes('.') 
+      ? keyStr.split('.').reduce((obj: any, key: string) => obj?.[key], record)
       : record[column.key as keyof T]
 
     if (column.render) {

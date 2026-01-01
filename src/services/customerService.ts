@@ -1,11 +1,10 @@
-import { supabase } from '../lib/supabase'
 import { User, Subscription, Payment } from '../types'
-import { Database } from '../types/database'
 import { DataRetrievalService, UserFilters, PaginationOptions, SortOptions } from './dataRetrievalService'
 
-type UserRow = Database['public']['Tables']['users']['Row']
-type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row']
-type PaymentRow = Database['public']['Tables']['payments']['Row']
+// Commented out unused types
+// type UserRow = Database['public']['Tables']['users']['Row']
+// type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row']
+// type PaymentRow = Database['public']['Tables']['payments']['Row']
 
 export interface CustomerWithDetails extends User {
   subscription?: Subscription
@@ -54,6 +53,7 @@ export class CustomerService {
     return response.data
   }
 
+  /*
   private static mapRowToUser(row: UserRow): User {
     return {
       id: row.id,
@@ -104,7 +104,9 @@ export class CustomerService {
       metadata: row.metadata as Record<string, string | number | boolean> | undefined
     }
   }
+  */
 
+  /*
   private static parseCoordinates(coordinates: unknown): [number, number] | undefined {
     // Parse PostGIS POINT format: "POINT(lng lat)"
     if (typeof coordinates === 'string') {
@@ -116,4 +118,5 @@ export class CustomerService {
     }
     return undefined
   }
+  */
 }

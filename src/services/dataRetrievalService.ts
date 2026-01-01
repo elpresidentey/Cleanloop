@@ -8,10 +8,8 @@ import {
   UserRole,
   PickupStatus,
   PaymentMethod,
-  ComplaintStatus,
-  SubscriptionStatus
+  ComplaintStatus
 } from '../types'
-import { Database } from '../types/database'
 
 // Common pagination and filtering interfaces
 export interface PaginationOptions {

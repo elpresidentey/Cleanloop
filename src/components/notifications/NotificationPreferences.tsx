@@ -6,7 +6,7 @@ interface NotificationPreferencesProps {
   userRole: 'resident' | 'collector' | 'admin';
 }
 
-export const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ userRole }) => {
+export const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ userRole: _userRole }) => {
   const { profile } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreferencesType | null>(null);
   const [loading, setLoading] = useState(true);

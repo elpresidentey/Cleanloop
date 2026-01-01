@@ -256,7 +256,7 @@ export class AuthService {
           house_number: profileData.houseNumber,
           coordinates: null,
           is_active: true
-        })
+        } as any)
 
       if (error) {
         return { error }
@@ -264,9 +264,11 @@ export class AuthService {
 
       // Log profile creation
       try {
-        await AuditService.logAuthEvent(
+        await AuditService.logUserEvent(
           profileData.id,
-          'profile_created',
+          'user_created',
+          profileData.id,
+          undefined,
           { 
             role: profileData.role,
             area: profileData.area,

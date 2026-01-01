@@ -381,7 +381,13 @@ describe('Critical Workflow Integration Tests', () => {
     return createMockAuthState({
       profile: mockProfile,
       user: mockUser,
-      session: { user: mockUser },
+      session: { 
+        user: mockUser,
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        token_type: 'bearer'
+      } as any,
       isAuthenticated: true,
       isResident: role === 'resident',
       isCollector: role === 'collector',
@@ -489,8 +495,8 @@ describe('Critical Workflow Integration Tests', () => {
       }
 
       // Verify location functionality is accessible
-      expect(mockResident.profile.location).toBeDefined()
-      expect(mockResident.profile.location.area).toBe('Victoria Island')
+      expect(mockResident.profile?.location).toBeDefined()
+      expect(mockResident.profile?.location?.area).toBe('Victoria Island')
     })
   })
 
@@ -561,7 +567,7 @@ describe('Critical Workflow Integration Tests', () => {
         expect(hasGeographicFeatures).toBe(true)
       } else {
         // At minimum, verify collector has access to location data
-        expect(mockCollector.profile.location).toBeDefined()
+        expect(mockCollector.profile?.location).toBeDefined()
       }
     })
   })
@@ -724,7 +730,7 @@ describe('Critical Workflow Integration Tests', () => {
       // Should handle unauthenticated state
       await waitFor(() => {
         // Look for login/auth related content or redirect
-        const authContent = screen.queryAllByText(/sign in/i)[0] ||
+        screen.queryAllByText(/sign in/i)[0] ||
                           screen.queryByText(/login/i) ||
                           screen.queryByText(/auth/i) ||
                           screen.queryByText(/welcome/i)
@@ -763,8 +769,8 @@ describe('Critical Workflow Integration Tests', () => {
 
       // Verify data consistency mechanisms are in place
       expect(mockCollector.profile).toBeDefined()
-      expect(mockCollector.profile.id).toBe('collector-123')
-      expect(mockCollector.profile.role).toBe('collector')
+      expect(mockCollector.profile?.id).toBe('collector-123')
+      expect(mockCollector.profile?.role).toBe('collector')
     })
 
     it('should validate user inputs and prevent invalid operations', async () => {
@@ -788,8 +794,8 @@ describe('Critical Workflow Integration Tests', () => {
         expect(hasInteractiveElements).toBe(true)
       } else {
         // At minimum, verify the user data is properly structured
-        expect(mockResident.profile.email).toMatch(/@/)
-        expect(mockResident.profile.phone).toMatch(/^\+234/)
+        expect(mockResident.profile?.email).toMatch(/@/)
+        expect(mockResident.profile?.phone).toMatch(/^\+234/)
       }
     })
   })

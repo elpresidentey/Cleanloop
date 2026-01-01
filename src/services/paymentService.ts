@@ -5,7 +5,6 @@ import { DataRetrievalService, PaymentFilters, PaginationOptions, SortOptions } 
 import { PDFService, ReceiptData } from './pdfService'
 
 type PaymentRow = Database['public']['Tables']['payments']['Row']
-type PaymentInsert = Database['public']['Tables']['payments']['Insert']
 
 export class PaymentService {
   // Enhanced method using DataRetrievalService
@@ -30,17 +29,20 @@ export class PaymentService {
       // Generate a unique reference if not provided
       const reference = input.reference || `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       
+      // Create insert data with proper typing
+      const insertData = {
+        user_id: input.userId,
+        amount: input.amount,
+        currency: input.currency || 'NGN',
+        payment_method: input.paymentMethod,
+        reference: reference,
+        status: 'completed' as const
+      }
+      
       // Try the standard approach first
       const { data, error } = await supabase
         .from('payments')
-        .insert({
-          user_id: input.userId,
-          amount: input.amount,
-          currency: input.currency || 'NGN',
-          payment_method: input.paymentMethod,
-          reference: reference,
-          status: 'completed'
-        })
+        .insert(insertData as any)
         .select()
         .single()
 

@@ -22,7 +22,7 @@ export const LocationManagementPage: React.FC = () => {
     )
   }
 
-  const handleUpdateSuccess = (newLocation: UserLocation) => {
+  const handleUpdateSuccess = (_newLocation: UserLocation) => {
     setSuccessMessage('Location updated successfully! Changes will apply to all future pickup requests.')
     setErrorMessage(null)
     setShowUpdateForm(false)

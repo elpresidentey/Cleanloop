@@ -1,12 +1,11 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { DataTable } from './DataTable'
 import { SearchAndFilter } from './SearchAndFilter'
 import { 
   usePickupRequests, 
   usePayments, 
   useComplaints, 
-  useCustomerDetails,
-  useGlobalSearch 
+  useCustomerDetails
 } from '../../hooks/useDataRetrieval'
 import { 
   PickupRequestFilters, 
@@ -14,7 +13,7 @@ import {
   ComplaintFilters, 
   UserFilters 
 } from '../../services/dataRetrievalService'
-import { PickupRequest, Payment, Complaint } from '../../types'
+import { Payment } from '../../types'
 import { useAuth } from '../../hooks/useAuth'
 
 type DataType = 'pickups' | 'payments' | 'complaints' | 'customers'
@@ -54,7 +53,7 @@ export function DataRetrievalDemo() {
   )
 
   // Global search
-  const globalSearch = useGlobalSearch()
+  // const globalSearch = useGlobalSearch()
 
   const tabs = [
     { key: 'pickups' as const, label: 'Pickup Requests', count: pickupData.pagination?.total },
@@ -376,10 +375,10 @@ export function DataRetrievalDemo() {
 
           {/* Data Table */}
           <DataTable
-            data={currentData.data}
+            data={currentData.data as any}
             columns={getCurrentColumns()}
             loading={currentData.loading}
-            pagination={currentData.pagination}
+            pagination={currentData.pagination || undefined}
             onPageChange={currentData.goToPage}
             onLimitChange={currentData.changeLimit}
             onSort={currentData.changeSort}

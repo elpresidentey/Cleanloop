@@ -34,7 +34,7 @@ export class ErrorReportingService {
           severity: errorReport.severity,
           context: errorReport.context,
           resolved: false
-        })
+        } as any)
 
       return { error }
     } catch (err) {
@@ -176,7 +176,7 @@ export class ErrorReportingService {
         return { data: [], error }
       }
 
-      const errorReports: ErrorReport[] = data.map(row => ({
+      const errorReports: ErrorReport[] = (data as any[]).map((row: any) => ({
         id: row.id,
         userId: row.user_id,
         errorType: row.error_type,
@@ -202,7 +202,7 @@ export class ErrorReportingService {
    */
   static async markAsResolved(errorId: string): Promise<{ error: any }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('error_reports')
         .update({ resolved: true })
         .eq('id', errorId)

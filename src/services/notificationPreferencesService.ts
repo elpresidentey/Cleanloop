@@ -46,18 +46,18 @@ export class NotificationPreferencesService {
     }
 
     return {
-      userId: data.user_id,
-      emailNotifications: data.email_notifications,
-      smsNotifications: data.sms_notifications,
-      pushNotifications: data.push_notifications,
-      pickupReminders: data.pickup_reminders,
-      paymentReminders: data.payment_reminders,
-      complaintUpdates: data.complaint_updates,
-      systemAlerts: data.system_alerts,
-      marketingEmails: data.marketing_emails,
-      weeklyReports: data.weekly_reports,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
+      userId: (data as any).user_id,
+      emailNotifications: (data as any).email_notifications,
+      smsNotifications: (data as any).sms_notifications,
+      pushNotifications: (data as any).push_notifications,
+      pickupReminders: (data as any).pickup_reminders,
+      paymentReminders: (data as any).payment_reminders,
+      complaintUpdates: (data as any).complaint_updates,
+      systemAlerts: (data as any).system_alerts,
+      marketingEmails: (data as any).marketing_emails,
+      weeklyReports: (data as any).weekly_reports,
+      createdAt: (data as any).created_at,
+      updatedAt: (data as any).updated_at
     }
   }
 
@@ -79,7 +79,7 @@ export class NotificationPreferencesService {
         marketing_emails: preferences.marketingEmails,
         weekly_reports: preferences.weeklyReports,
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     return { error }
   }

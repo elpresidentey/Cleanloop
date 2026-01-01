@@ -4,7 +4,6 @@ import { Database } from '../types/database'
 import { DataRetrievalService, PickupRequestFilters, PaginationOptions, SortOptions } from './dataRetrievalService'
 
 type PickupRequestRow = Database['public']['Tables']['pickup_requests']['Row']
-type PickupRequestInsert = Database['public']['Tables']['pickup_requests']['Insert']
 
 export class PickupService {
   // Enhanced method using DataRetrievalService
@@ -53,12 +52,11 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
-    const insertData: PickupRequestInsert = {
+    const insertData = {
       user_id: input.userId,
       scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
-      special_instructions: input.notes,
-      pickup_address: `${input.location.area}, ${input.location.street} ${input.location.houseNumber}`,
-      status: 'pending'
+      notes: input.notes,
+      status: 'requested' as const
     }
 
     const { data, error } = await supabase
@@ -104,7 +102,7 @@ export class PickupService {
 
   private static mapRowToPickupRequest(row: PickupRequestRow): PickupRequest {
     // Parse address back to location components (basic parsing)
-    const addressParts = (row.pickup_address || '').split(', ')
+    const addressParts = (row.notes || '').split(', ')
     const area = addressParts[0] || ''
     const streetAndHouse = addressParts[1] || ''
     const streetParts = streetAndHouse.split(' ')
@@ -117,7 +115,7 @@ export class PickupService {
       collectorId: row.collector_id || undefined,
       scheduledDate: new Date(row.scheduled_date),
       status: row.status,
-      notes: row.special_instructions || undefined,
+      notes: row.notes || undefined,
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
@@ -211,27 +209,15 @@ export class PickupService {
       updated_at: now.toISOString()
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('pickup_requests')
       .update(updateData)
       .eq('user_id', userId)
       .gt('scheduled_date', now.toISOString().split('T')[0])
-      .in('status', ['pending', 'scheduled'])
+      .in('status', ['requested', 'scheduled'])
 
     if (error) {
       throw new Error(`Failed to update location for future pickups: ${error.message}`)
     }
-  }
-
-  private static parseCoordinates(coordinates: unknown): [number, number] | undefined {
-    // Parse PostGIS POINT format: "POINT(lng lat)"
-    if (typeof coordinates === 'string') {
-      const match = coordinates.match(/POINT\(([^)]+)\)/)
-      if (match) {
-        const [lng, lat] = match[1].split(' ').map(Number)
-        return [lng, lat]
-      }
-    }
-    return undefined
   }
 }

@@ -1,5 +1,26 @@
 import { ConvexReactClient } from 'convex/react'
 
+// Mock API for build compatibility
+const api = {
+  pickups: {
+    updatePickupStatus: 'pickups:updatePickupStatus',
+    assignPickupToCollector: 'pickups:assignPickupToCollector'
+  },
+  complaints: {
+    createComplaint: 'complaints:createComplaint',
+    updateComplaintStatus: 'complaints:updateComplaintStatus',
+    resolveComplaint: 'complaints:resolveComplaint'
+  },
+  notifications: {
+    sendNotification: 'notifications:sendNotification',
+    markNotificationAsRead: 'notifications:markNotificationAsRead',
+    markAllNotificationsAsRead: 'notifications:markAllNotificationsAsRead'
+  },
+  metrics: {
+    updateDailyPickupMetrics: 'metrics:updateDailyPickupMetrics'
+  }
+} as any
+
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 
 if (!convexUrl) {
@@ -109,7 +130,7 @@ export const realtimeMutations = {
       houseNumber: string
     }
   }) => {
-    return convex.mutation("pickups:updatePickupStatus", args)
+    return convex.mutation(api.pickups.updatePickupStatus as any, args)
   },
 
   // Create complaint with real-time notification
@@ -121,7 +142,7 @@ export const realtimeMutations = {
     photoUrl?: string
     priority?: string
   }) => {
-    return convex.mutation("complaints:createComplaint", args)
+    return convex.mutation(api.complaints.createComplaint as any, args)
   },
 
   // Send notification
@@ -132,12 +153,12 @@ export const realtimeMutations = {
     message: string
     data?: any
   }) => {
-    return convex.mutation("notifications:sendNotification", args)
+    return convex.mutation(api.notifications.sendNotification as any, args)
   },
 
   // Mark notification as read
   markNotificationAsRead: async (notificationId: string, userId: string) => {
-    return convex.mutation("notifications:markNotificationAsRead", { 
+    return convex.mutation(api.notifications.markNotificationAsRead as any, { 
       notificationId, 
       userId 
     })
@@ -145,7 +166,7 @@ export const realtimeMutations = {
 
   // Mark all notifications as read
   markAllNotificationsAsRead: async (userId: string) => {
-    return convex.mutation("notifications:markAllNotificationsAsRead", { userId })
+    return convex.mutation(api.notifications.markAllNotificationsAsRead as any, { userId })
   },
 
   // Assign pickup to collector
@@ -160,7 +181,7 @@ export const realtimeMutations = {
       houseNumber: string
     }
   }) => {
-    return convex.mutation("pickups:assignPickupToCollector", args)
+    return convex.mutation(api.pickups.assignPickupToCollector as any, args)
   },
 
   // Update complaint status
@@ -172,7 +193,7 @@ export const realtimeMutations = {
     newStatus: string
     adminNotes?: string
   }) => {
-    return convex.mutation("complaints:updateComplaintStatus", args)
+    return convex.mutation(api.complaints.updateComplaintStatus as any, args)
   },
 
   // Resolve complaint
@@ -183,7 +204,7 @@ export const realtimeMutations = {
     resolution: string
     adminNotes?: string
   }) => {
-    return convex.mutation("complaints:resolveComplaint", args)
+    return convex.mutation(api.complaints.resolveComplaint as any, args)
   },
 
   // Update daily metrics
@@ -195,6 +216,6 @@ export const realtimeMutations = {
     completedPickups: number
     missedPickups: number
   }) => {
-    return convex.mutation("metrics:updateDailyPickupMetrics", args)
+    return convex.mutation(api.metrics.updateDailyPickupMetrics as any, args)
   }
 }

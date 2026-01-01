@@ -56,7 +56,13 @@ export class PickupService {
       user_id: input.userId,
       scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
       notes: input.notes,
-      status: 'requested' as const
+      status: 'requested' as const,
+      area: input.location.area,
+      street: input.location.street,
+      house_number: input.location.houseNumber,
+      coordinates: input.location.coordinates ? 
+        `POINT(${input.location.coordinates[0]} ${input.location.coordinates[1]})` : 
+        null
     }
 
     const { data, error } = await supabase

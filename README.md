@@ -1,5 +1,7 @@
 # 🌱 CleanLoop Platform
 
+<!-- Updated: January 2025 - Vercel deployment ready with environment variables -->
+
 **A comprehensive waste management platform for residents, collectors, and administrators.**
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)

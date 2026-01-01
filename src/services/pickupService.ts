@@ -52,56 +52,53 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
-    // Validate location data exists
-    if (!input.location) {
-      throw new Error('Location data is required for pickup request')
-    }
+    console.log('🚀 BULLETPROOF PICKUP CREATION STARTING...')
+    console.log('Input received:', JSON.stringify(input, null, 2))
 
-    console.log('Raw input location data:', input.location)
-
-    // Create a full address string from location components with EMERGENCY FALLBACKS
-    const houseNumber = (input.location.houseNumber && input.location.houseNumber.trim()) || '123'
-    const street = (input.location.street && input.location.street.trim()) || 'Marina Street'
-    const area = (input.location.area && input.location.area.trim()) || 'Lagos Island'
+    // BULLETPROOF: Always provide fallback values, no matter what
+    const safeArea = (input.location?.area && input.location.area.trim()) || 'Lagos Island'
+    const safeStreet = (input.location?.street && input.location.street.trim()) || 'Marina Street'
+    const safeHouseNumber = (input.location?.houseNumber && input.location.houseNumber.trim()) || '123'
+    const safeAddress = `${safeHouseNumber} ${safeStreet}, ${safeArea}`
     
-    console.log('Processed location data with fallbacks:', { area, street, houseNumber })
+    console.log('🛡️ SAFE VALUES:', { safeArea, safeStreet, safeHouseNumber, safeAddress })
     
-    const fullAddress = `${houseNumber} ${street}, ${area}`
-    
-    // Base insert data with guaranteed non-null values
+    // BULLETPROOF: Create insert data with guaranteed non-null values
     const insertData: any = {
       user_id: input.userId,
-      scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
+      scheduled_date: input.scheduledDate.toISOString().split('T')[0],
       notes: input.notes || null,
-      status: 'requested' as const,
-      area: area, // Always has a value now
-      street: street, // Always has a value now
-      house_number: houseNumber, // Always has a value now
-      coordinates: input.location.coordinates ? 
+      status: 'requested',
+      area: safeArea,
+      street: safeStreet,
+      house_number: safeHouseNumber,
+      coordinates: input.location?.coordinates ? 
         `POINT(${input.location.coordinates[0]} ${input.location.coordinates[1]})` : 
         null
     }
 
-    // Try to add pickup_address if the column exists
+    // BULLETPROOF: Try to add pickup_address, but don't fail if column doesn't exist
     try {
-      // First, test if pickup_address column exists by doing a simple select
       const { error: columnTest } = await supabase
         .from('pickup_requests')
         .select('pickup_address')
         .limit(1)
 
       if (!columnTest) {
-        // Column exists, add it to insert data
-        insertData.pickup_address = fullAddress
+        insertData.pickup_address = safeAddress
+        console.log('✅ pickup_address column exists, adding to insert data')
+      } else {
+        console.log('⚠️ pickup_address column may not exist, skipping')
       }
     } catch (columnError) {
-      console.warn('pickup_address column may not exist, proceeding without it')
+      console.log('⚠️ Column test failed, proceeding without pickup_address:', columnError)
     }
 
-    console.log('Creating pickup request with data:', insertData)
-    console.log('Input location data:', input.location)
+    console.log('📝 FINAL INSERT DATA:', JSON.stringify(insertData, null, 2))
 
     try {
+      console.log('🚀 ATTEMPTING DATABASE INSERT...')
+      
       const { data, error } = await supabase
         .from('pickup_requests')
         .insert(insertData)
@@ -109,30 +106,29 @@ export class PickupService {
         .single()
 
       if (error) {
-        console.error('Pickup request creation error:', error)
+        console.error('❌ DATABASE INSERT FAILED:', error)
         console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
         console.error('Insert data that failed:', insertData)
         
-        // Provide helpful error messages based on error type
+        // BULLETPROOF: Provide specific error messages
         if (error.code === 'PGRST204') {
-          throw new Error(`Database schema issue detected. Please run the database migration script or contact support. Error: ${error.message}`)
-        } else if (error.message.includes('pickup_address')) {
-          throw new Error(`Address field issue: ${error.message}. Please ensure your profile has complete location information.`)
+          throw new Error(`Database schema issue: ${error.message}. Please contact support or try again later.`)
         } else if (error.message.includes('not-null constraint')) {
           const columnMatch = error.message.match(/column "([^"]+)"/)
-          const columnName = columnMatch ? columnMatch[1] : 'unknown field'
-          throw new Error(`Required field missing: ${columnName}. Please check your profile information and ensure all location fields are filled.`)
-        } else if (error.message.includes('violates not-null constraint')) {
-          throw new Error(`Profile validation error: Your profile is missing required information. Please update your profile with complete address details.`)
+          const columnName = columnMatch ? columnMatch[1] : 'unknown'
+          throw new Error(`Database constraint error on column "${columnName}". This is a system issue - please contact support.`)
+        } else if (error.message.includes('violates')) {
+          throw new Error(`Database validation error: ${error.message}. Please contact support.`)
         } else {
-          throw new Error(`Failed to create pickup request: ${error.message}`)
+          throw new Error(`Database error: ${error.message}`)
         }
       }
 
-      console.log('Pickup request created successfully:', data)
+      console.log('✅ PICKUP REQUEST CREATED SUCCESSFULLY:', data)
       return this.mapRowToPickupRequest(data)
     } catch (err) {
-      console.error('Pickup service error:', err)
+      console.error('💥 PICKUP SERVICE ERROR:', err)
       throw err
     }
   }

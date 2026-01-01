@@ -37,6 +37,14 @@ export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
       return
     }
 
+    // Validate profile has complete location data
+    if (!profile.location.area || !profile.location.area.trim() ||
+        !profile.location.street || !profile.location.street.trim() ||
+        !profile.location.houseNumber || !profile.location.houseNumber.trim()) {
+      setError('Your profile is missing location information. Please update your profile with your complete address (area, street, and house number) before requesting a pickup.')
+      return
+    }
+
     if (!formData.scheduledDate) {
       setError('Please select a pickup date')
       return
@@ -74,7 +82,19 @@ export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
       }
     } catch (error) {
       console.error('Failed to create pickup request:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create pickup request')
+      let errorMessage = 'Failed to create pickup request'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Complete location information is required')) {
+          errorMessage = 'Your profile is missing complete location information. Please update your profile with your area, street, and house number.'
+        } else if (error.message.includes('Database schema issue')) {
+          errorMessage = 'There is a temporary system issue. Please try again in a few minutes or contact support.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      setError(errorMessage)
     } finally {
       setSubmitting(false)
     }

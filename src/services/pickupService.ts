@@ -52,15 +52,30 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
-    // Validate location data
+    // Validate location data exists
     if (!input.location) {
       throw new Error('Location data is required for pickup request')
     }
 
-    // Create a full address string from location components with fallbacks
-    const houseNumber = input.location.houseNumber || 'N/A'
-    const street = input.location.street || 'N/A'
-    const area = input.location.area || 'N/A'
+    console.log('Raw input location data:', input.location)
+
+    // Create a full address string from location components with proper empty string handling
+    const houseNumber = (input.location.houseNumber && input.location.houseNumber.trim()) || null
+    const street = (input.location.street && input.location.street.trim()) || null
+    const area = (input.location.area && input.location.area.trim()) || null
+    
+    console.log('Processed location data:', { area, street, houseNumber })
+    
+    // Validate that we have actual location data (not just empty strings)
+    if (!area || !street || !houseNumber) {
+      const missing = []
+      if (!area) missing.push('area')
+      if (!street) missing.push('street') 
+      if (!houseNumber) missing.push('house number')
+      
+      throw new Error(`Your profile is missing required location information: ${missing.join(', ')}. Please update your profile with complete address details before requesting a pickup.`)
+    }
+    
     const fullAddress = `${houseNumber} ${street}, ${area}`
     
     // Base insert data (columns that should always exist)
@@ -114,7 +129,11 @@ export class PickupService {
         } else if (error.message.includes('pickup_address')) {
           throw new Error(`Address field issue: ${error.message}. Please ensure your profile has complete location information.`)
         } else if (error.message.includes('not-null constraint')) {
-          throw new Error(`Required field missing: ${error.message}. Please check your profile information.`)
+          const columnMatch = error.message.match(/column "([^"]+)"/)
+          const columnName = columnMatch ? columnMatch[1] : 'unknown field'
+          throw new Error(`Required field missing: ${columnName}. Please check your profile information and ensure all location fields are filled.`)
+        } else if (error.message.includes('violates not-null constraint')) {
+          throw new Error(`Profile validation error: Your profile is missing required information. Please update your profile with complete address details.`)
         } else {
           throw new Error(`Failed to create pickup request: ${error.message}`)
         }

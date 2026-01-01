@@ -99,6 +99,7 @@ export interface Database {
           area: string
           street: string
           house_number: string
+          pickup_address: string
           coordinates: unknown | null
           created_at: string
           updated_at: string
@@ -114,6 +115,7 @@ export interface Database {
           area: string
           street: string
           house_number: string
+          pickup_address: string
           coordinates?: unknown | null
           created_at?: string
           updated_at?: string
@@ -129,6 +131,7 @@ export interface Database {
           area?: string
           street?: string
           house_number?: string
+          pickup_address?: string
           coordinates?: unknown | null
           created_at?: string
           updated_at?: string

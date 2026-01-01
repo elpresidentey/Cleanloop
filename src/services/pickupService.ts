@@ -52,6 +52,9 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
+    // Create a full address string from location components
+    const fullAddress = `${input.location.houseNumber} ${input.location.street}, ${input.location.area}`
+    
     const insertData = {
       user_id: input.userId,
       scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
@@ -60,10 +63,13 @@ export class PickupService {
       area: input.location.area,
       street: input.location.street,
       house_number: input.location.houseNumber,
+      pickup_address: fullAddress, // Add the missing pickup_address field
       coordinates: input.location.coordinates ? 
         `POINT(${input.location.coordinates[0]} ${input.location.coordinates[1]})` : 
         null
     }
+
+    console.log('Creating pickup request with data:', insertData)
 
     const { data, error } = await supabase
       .from('pickup_requests')
@@ -72,6 +78,7 @@ export class PickupService {
       .single()
 
     if (error) {
+      console.error('Pickup request creation error:', error)
       throw new Error(`Failed to create pickup request: ${error.message}`)
     }
 

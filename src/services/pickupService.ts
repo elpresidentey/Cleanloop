@@ -52,13 +52,19 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
+    // Validate location data
+    if (!input.location) {
+      throw new Error('Location data is required for pickup request')
+    }
+
     // Create a full address string from location components with fallbacks
-    const houseNumber = input.location?.houseNumber || 'N/A'
-    const street = input.location?.street || 'N/A'
-    const area = input.location?.area || 'N/A'
+    const houseNumber = input.location.houseNumber || 'N/A'
+    const street = input.location.street || 'N/A'
+    const area = input.location.area || 'N/A'
     const fullAddress = `${houseNumber} ${street}, ${area}`
     
-    const insertData = {
+    // Base insert data (columns that should always exist)
+    const insertData: any = {
       user_id: input.userId,
       scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
       notes: input.notes || null,
@@ -66,10 +72,25 @@ export class PickupService {
       area: area,
       street: street,
       house_number: houseNumber,
-      pickup_address: fullAddress, // Ensure this is always provided
-      coordinates: input.location?.coordinates ? 
+      coordinates: input.location.coordinates ? 
         `POINT(${input.location.coordinates[0]} ${input.location.coordinates[1]})` : 
         null
+    }
+
+    // Try to add pickup_address if the column exists
+    try {
+      // First, test if pickup_address column exists by doing a simple select
+      const { error: columnTest } = await supabase
+        .from('pickup_requests')
+        .select('pickup_address')
+        .limit(1)
+
+      if (!columnTest) {
+        // Column exists, add it to insert data
+        insertData.pickup_address = fullAddress
+      }
+    } catch (columnError) {
+      console.warn('pickup_address column may not exist, proceeding without it')
     }
 
     console.log('Creating pickup request with data:', insertData)
@@ -78,14 +99,25 @@ export class PickupService {
     try {
       const { data, error } = await supabase
         .from('pickup_requests')
-        .insert(insertData as any)
+        .insert(insertData)
         .select()
         .single()
 
       if (error) {
         console.error('Pickup request creation error:', error)
+        console.error('Error code:', error.code)
         console.error('Insert data that failed:', insertData)
-        throw new Error(`Failed to create pickup request: ${error.message}`)
+        
+        // Provide helpful error messages based on error type
+        if (error.code === 'PGRST204') {
+          throw new Error(`Database schema issue detected. Please run the database migration script or contact support. Error: ${error.message}`)
+        } else if (error.message.includes('pickup_address')) {
+          throw new Error(`Address field issue: ${error.message}. Please ensure your profile has complete location information.`)
+        } else if (error.message.includes('not-null constraint')) {
+          throw new Error(`Required field missing: ${error.message}. Please check your profile information.`)
+        } else {
+          throw new Error(`Failed to create pickup request: ${error.message}`)
+        }
       }
 
       console.log('Pickup request created successfully:', data)

@@ -18,13 +18,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'x-client-info': 'cleanloop-platform'
-    },
-    fetch: (url, options = {}) => {
-      return fetch(url, {
-        ...options,
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      })
     }
   },
   db: {

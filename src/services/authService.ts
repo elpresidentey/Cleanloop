@@ -185,11 +185,15 @@ export class AuthService {
    */
   static async getUserProfile(userId: string): Promise<{ profile: User | null; error: any }> {
     try {
+      console.log('Fetching user profile for ID:', userId)
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
+
+      console.log('Supabase response:', { data, error })
 
       if (error) {
         // Handle case where user profile doesn't exist (PGRST116)
@@ -197,7 +201,9 @@ export class AuthService {
           console.log('User profile not found, this might be a new user that needs profile creation')
           return { profile: null, error: { ...error, message: 'User profile not found. Please complete registration.' } }
         }
+        console.error('Supabase error:', error)
         return { profile: null, error }
+      }
       }
 
       if (!data) {

@@ -6,36 +6,29 @@ Your Vercel deployment shows a blank page with this error:
 Uncaught Error: Missing Supabase environment variables. Please check your .env.local file.
 ```
 
-## ⚡ Quick Solution (2 minutes)
+## ⚡ URGENT: Manual Setup Required (2 minutes)
 
-### Option 1: Use the vercel.json file (Easiest)
-I've created a `vercel.json` file with your environment variables. Just commit and push:
+The `vercel.json` approach doesn't work for client-side environment variables. You MUST set them manually.
 
-```bash
-git add vercel.json VERCEL_ENVIRONMENT_SETUP.md QUICK_DEPLOYMENT_FIX.md
-git commit -m "Add Vercel configuration with environment variables"
-git push origin main
-```
+### 🎯 Immediate Solution
 
-Vercel will automatically redeploy with the correct environment variables.
+1. **Go to [vercel.com](https://vercel.com)** and sign in
+2. **Click on your CleanLoop project**
+3. **Go to Settings → Environment Variables**
+4. **Add these 3 variables:**
 
-### Option 2: Set via Vercel Dashboard (Most Secure)
+| Variable Name | Value | Environments |
+|---------------|-------|--------------|
+| `VITE_SUPABASE_URL` | `https://vwypugutdwffdqveezdh.supabase.co` | ✅ All (Production, Preview, Development) |
+| `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3eXB1Z3V0ZHdmZmRxdmVlemRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NDg5MjIsImV4cCI6MjA4MjUyNDkyMn0.r6GESz9VPTdXdfloI8oCPbTw162yd2PZFXvGRuQsr7Y` | ✅ All (Production, Preview, Development) |
+| `VITE_CONVEX_URL` | `https://first-hornet-199.convex.cloud` | ✅ All (Production, Preview, Development) |
 
-1. Go to your Vercel project dashboard
-2. Click "Settings" → "Environment Variables"
-3. Add these 3 variables:
-
-| Name | Value |
-|------|-------|
-| `VITE_SUPABASE_URL` | `https://vwypugutdwffdqveezdh.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3eXB1Z3V0ZHdmZmRxdmVlemRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NDg5MjIsImV4cCI6MjA4MjUyNDkyMn0.r6GESz9VPTdXdfloI8oCPbTw162yd2PZFXvGRuQsr7Y` |
-| `VITE_CONVEX_URL` | `https://first-hornet-199.convex.cloud` |
-
-4. Select "Production", "Preview", and "Development" for each
-5. Click "Redeploy" on your latest deployment
+5. **Click "Save" for each variable**
+6. **Go to Deployments tab → Click "Redeploy" on latest deployment**
+7. **Wait 2-3 minutes for redeployment**
 
 ## ✅ Expected Result
-After fixing the environment variables:
+After manual setup and redeployment:
 - ✅ No more blank page
 - ✅ Application loads properly
 - ✅ Login/registration works
@@ -47,11 +40,18 @@ After fixing the environment variables:
 3. Try registering a new user
 4. Test core functionality
 
-## 📝 Why This Happened
-Vercel doesn't automatically use your local `.env.local` file. Environment variables must be explicitly configured in the Vercel dashboard or via `vercel.json`.
+## 📝 Why Manual Setup is Required
+- Vercel's `env` property in `vercel.json` is deprecated
+- Client-side environment variables (VITE_*) must be set at build time
+- They need to be configured in the Vercel dashboard to be available during build
 
-The variables are safe to expose as they're designed for client-side use (Supabase anon key and public URLs).
+## 🆘 Still Not Working?
+1. **Clear browser cache** (Ctrl+Shift+R)
+2. **Check all 3 variables are set** in Vercel dashboard
+3. **Verify you selected ALL environments** for each variable
+4. **Make sure you clicked "Redeploy"** after adding variables
+5. **Wait for deployment to complete** (check Deployments tab)
 
 ---
 
-**Need help?** Check the detailed guide in `VERCEL_ENVIRONMENT_SETUP.md`
+**Detailed guide:** See `VERCEL_MANUAL_SETUP.md` for step-by-step instructions with more details.

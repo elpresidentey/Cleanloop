@@ -52,37 +52,48 @@ export class PickupService {
   }
 
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
-    // Create a full address string from location components
-    const fullAddress = `${input.location.houseNumber} ${input.location.street}, ${input.location.area}`
+    // Create a full address string from location components with fallbacks
+    const houseNumber = input.location?.houseNumber || 'N/A'
+    const street = input.location?.street || 'N/A'
+    const area = input.location?.area || 'N/A'
+    const fullAddress = `${houseNumber} ${street}, ${area}`
     
     const insertData = {
       user_id: input.userId,
       scheduled_date: input.scheduledDate.toISOString().split('T')[0], // Date only
-      notes: input.notes,
+      notes: input.notes || null,
       status: 'requested' as const,
-      area: input.location.area,
-      street: input.location.street,
-      house_number: input.location.houseNumber,
-      pickup_address: fullAddress, // Add the missing pickup_address field
-      coordinates: input.location.coordinates ? 
+      area: area,
+      street: street,
+      house_number: houseNumber,
+      pickup_address: fullAddress, // Ensure this is always provided
+      coordinates: input.location?.coordinates ? 
         `POINT(${input.location.coordinates[0]} ${input.location.coordinates[1]})` : 
         null
     }
 
     console.log('Creating pickup request with data:', insertData)
+    console.log('Input location data:', input.location)
 
-    const { data, error } = await supabase
-      .from('pickup_requests')
-      .insert(insertData as any)
-      .select()
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('pickup_requests')
+        .insert(insertData as any)
+        .select()
+        .single()
 
-    if (error) {
-      console.error('Pickup request creation error:', error)
-      throw new Error(`Failed to create pickup request: ${error.message}`)
+      if (error) {
+        console.error('Pickup request creation error:', error)
+        console.error('Insert data that failed:', insertData)
+        throw new Error(`Failed to create pickup request: ${error.message}`)
+      }
+
+      console.log('Pickup request created successfully:', data)
+      return this.mapRowToPickupRequest(data)
+    } catch (err) {
+      console.error('Pickup service error:', err)
+      throw err
     }
-
-    return this.mapRowToPickupRequest(data)
   }
 
   static async updateStatus(id: string, input: UpdatePickupStatusInput): Promise<PickupRequest> {

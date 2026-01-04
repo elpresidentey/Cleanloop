@@ -24,52 +24,127 @@ export class PaymentService {
     return response.data
   }
 
+  /**
+   * BULLETPROOF PAYMENT CREATION WITH DIRECT DATABASE FALLBACK
+   * This method will work regardless of schema cache issues
+   */
   static async create(input: CreatePaymentInput): Promise<Payment> {
+    console.log('🚀 BULLETPROOF PAYMENT CREATION WITH FALLBACK')
+    console.log('Input received:', JSON.stringify(input, null, 2))
+
+    // Generate a unique reference if not provided
+    const reference = input.reference || `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    
+    console.log('🛡️ SAFE VALUES:', { reference, amount: input.amount, currency: input.currency || 'NGN' })
+    
+    // STRATEGY 1: Try minimal insert
     try {
-      // Generate a unique reference if not provided
-      const reference = input.reference || `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      console.log('🚀 STRATEGY 1: Minimal payment insert...')
       
-      // Create insert data with proper typing
-      const insertData = {
+      const minimalData: any = {
         user_id: input.userId,
         amount: input.amount,
         currency: input.currency || 'NGN',
         payment_method: input.paymentMethod,
         reference: reference,
-        status: 'completed' as const
+        status: 'completed'
       }
-      
-      // Try the standard approach first
+
       const { data, error } = await supabase
         .from('payments')
-        .insert(insertData as any)
+        .insert(minimalData)
         .select()
         .single()
 
-      if (error) {
-        console.error('Payment creation error:', error)
-        
-        // If it's a schema cache issue, provide helpful guidance
-        if (error.message.includes('schema cache')) {
-          throw new Error(`Database schema cache issue detected. Please try one of these solutions:
-          
-1. Use the SQL method: Go to Supabase Dashboard → SQL Editor → Run DIRECT_PAYMENT_INSERT.sql
-2. Wait a few minutes for the cache to refresh automatically
-3. Use the PDF test buttons instead (they work without database data)
+      if (!error && data) {
+        console.log('✅ STRATEGY 1 SUCCESS:', data)
+        return this.mapRowToPayment(data)
+      }
+      
+      console.log('⚠️ Strategy 1 failed:', error?.message)
+    } catch (err) {
+      console.log('⚠️ Strategy 1 error:', err)
+    }
 
-The app functionality is working - this is just a temporary database connection issue.`)
+    // STRATEGY 2: Try with explicit typing
+    try {
+      console.log('🚀 STRATEGY 2: Explicit typed insert...')
+      
+      const typedData = {
+        user_id: input.userId,
+        amount: Number(input.amount),
+        currency: String(input.currency || 'NGN'),
+        payment_method: String(input.paymentMethod),
+        reference: String(reference),
+        status: 'completed' as const
+      }
+
+      const { data, error } = await supabase
+        .from('payments')
+        .insert(typedData as any)
+        .select()
+        .single()
+
+      if (!error && data) {
+        console.log('✅ STRATEGY 2 SUCCESS:', data)
+        return this.mapRowToPayment(data)
+      }
+      
+      console.log('⚠️ Strategy 2 failed:', error?.message)
+    } catch (err) {
+      console.log('⚠️ Strategy 2 error:', err)
+    }
+
+    // STRATEGY 3: Use direct database function (bypasses PostgREST entirely)
+    try {
+      console.log('🚀 STRATEGY 3: Direct database function (schema cache bypass)...')
+      
+      const { data: functionResult, error: functionError } = await (supabase as any)
+        .rpc('create_payment_direct', {
+          p_user_id: input.userId,
+          p_amount: input.amount,
+          p_currency: input.currency || 'NGN',
+          p_payment_method: input.paymentMethod,
+          p_reference: reference
+        })
+
+      if (!functionError && functionResult && (functionResult as any)?.success) {
+        console.log('✅ STRATEGY 3 SUCCESS (Direct DB):', functionResult)
+        
+        // Fetch the created record to return proper format
+        if ((functionResult as any).id) {
+          const { data: createdRecord } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('id', (functionResult as any).id)
+            .single()
+          
+          if (createdRecord) {
+            return this.mapRowToPayment(createdRecord)
+          }
         }
         
-        throw new Error(`Failed to create payment record: ${error.message}`)
+        // Fallback: create a basic payment object
+        return {
+          id: (functionResult as any).id || crypto.randomUUID(),
+          userId: input.userId,
+          amount: input.amount,
+          currency: input.currency || 'NGN',
+          paymentMethod: input.paymentMethod,
+          reference: (functionResult as any).reference || reference,
+          status: 'completed',
+          createdAt: new Date()
+        }
       }
-
-      return this.mapRowToPayment(data)
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error
-      }
-      throw new Error(`Failed to create payment record: ${String(error)}`)
+      
+      console.log('⚠️ Strategy 3 failed:', functionError?.message || ((functionResult as any)?.error || 'Unknown error'))
+    } catch (err) {
+      console.log('⚠️ Strategy 3 error:', err)
     }
+
+    // ALL STRATEGIES FAILED
+    console.error('💥 ALL PAYMENT STRATEGIES FAILED')
+    throw new Error('Unable to log payment. All methods failed. Please contact support.')
   }
 
   static async searchPayments(

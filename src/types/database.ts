@@ -372,7 +372,35 @@ export interface Database {
       }
     }
     Functions: {
-      [_ in never]: never
+      create_pickup_request_direct: {
+        Args: {
+          p_user_id: string
+          p_scheduled_date: string
+          p_notes?: string | null
+        }
+        Returns: {
+          success: boolean
+          id?: string
+          message: string
+          error?: string
+        }
+      }
+      create_payment_direct: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_currency?: string
+          p_payment_method?: string
+          p_reference?: string | null
+        }
+        Returns: {
+          success: boolean
+          id?: string
+          reference?: string
+          message: string
+          error?: string
+        }
+      }
     }
     Enums: {
       [_ in never]: never

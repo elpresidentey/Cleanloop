@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { captureException } from '../../lib/sentry'
 
 interface Props {
   children: ReactNode
@@ -34,12 +35,18 @@ export class ErrorBoundary extends Component<Props, State> {
     this.props.onError?.(error, errorInfo)
 
     // Log to external service in production
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
-      // TODO: Send to error reporting service (e.g., Sentry)
-      console.error('Production error:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack
+    if (import.meta.env.MODE === 'production') {
+      // Send to Sentry if configured
+      captureException(error, {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+      }).catch(() => {
+        // Fallback to console if Sentry fails
+        console.error('Production error:', {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack
+        })
       })
     }
   }
@@ -70,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 We're sorry, but something unexpected happened. Please try again.
               </p>
               
-              {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.MODE === 'development' && this.state.error && (
                 <details className="mt-4 text-left">
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                     Error Details (Development Only)

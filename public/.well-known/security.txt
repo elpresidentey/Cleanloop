@@ -1,0 +1,11 @@
+Contact: mailto:support@cleanloop.ng
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://cleanloop.ng/.well-known/security.txt
+
+# Security Policy
+Please report security vulnerabilities responsibly to: support@cleanloop.ng
+
+# Acknowledgments
+We appreciate responsible disclosure of security issues.
+

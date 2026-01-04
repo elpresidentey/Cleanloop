@@ -30,7 +30,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   return (
     <>
       {children}
-      {process.env.NODE_ENV === 'development' && renderTime && renderTime > 500 && (
+      {import.meta.env.MODE === 'development' && renderTime && renderTime > 500 && (
         <div className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-3 py-2 rounded text-xs">
           {componentName}: {renderTime.toFixed(0)}ms
         </div>

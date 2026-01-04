@@ -240,7 +240,7 @@ export const logError = (error: AppError, context?: Record<string, any>) => {
   console.error('Application Error:', errorInfo)
 
   // In production, send to error reporting service
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
+  if (import.meta.env.MODE === 'production') {
     ErrorReportingService.reportJSError(
       error instanceof Error ? error : new Error(error.message),
       context?.userId as string,

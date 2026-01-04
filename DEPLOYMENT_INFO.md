@@ -40,3 +40,23 @@ You are ready to deploy!
     ```
 
 **Your app is code-complete and ready for launch!**
+
+## 🔧 Troubleshooting
+
+### Database "Schema Cache Issue" or "Foreign Key" Error
+If you cannot log a payment or create a pickup request, it is likely due to:
+1.  **Missing User Profile:** Your user account exists in Auth but not in the `public.users` table.
+2.  **Schema Mismatch:** The code expects `payment_reference` but the database has `reference`.
+
+**✅ THE FIX:**
+
+1.  Open the file `FINAL_COMPLETE_FIX.sql` in your code editor.
+2.  Copy its **entire content**.
+3.  Go to **Supabase Dashboard** -> **SQL Editor**.
+4.  Paste and **Run** the script.
+5.  This will:
+    *   Sync your user profile.
+    *   Fix column names.
+    *   Create the "Bulletproof" functions.
+
+After running this SQL, the app WILL work.

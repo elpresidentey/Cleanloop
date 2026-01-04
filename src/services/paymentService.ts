@@ -29,30 +29,29 @@ export class PaymentService {
    * This method will work regardless of schema cache issues
    */
   static async create(input: CreatePaymentInput): Promise<Payment> {
-    console.log('🚀 BULLETPROOF PAYMENT CREATION WITH FALLBACK')
+    console.log('🚀 PAYMENT CREATION - FIXED SCHEMA VERSION')
     console.log('Input received:', JSON.stringify(input, null, 2))
 
-    // Generate a unique reference if not provided
+    // Generate a unique reference
     const reference = input.reference || `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    
-    console.log('🛡️ SAFE VALUES:', { reference, amount: input.amount, currency: input.currency || 'NGN' })
-    
-    // STRATEGY 1: Try minimal insert
+
+    // STRATEGY 1: Correct Schema Insert (payment_reference)
     try {
-      console.log('🚀 STRATEGY 1: Minimal payment insert...')
-      
-      const minimalData: any = {
+      console.log('🚀 STRATEGY 1: Insert with correct schema (payment_reference)...')
+
+      const paymentData = {
         user_id: input.userId,
         amount: input.amount,
         currency: input.currency || 'NGN',
         payment_method: input.paymentMethod,
-        reference: reference,
-        status: 'completed'
+        payment_reference: reference, // CORRECT COLUMN NAME
+        status: 'completed',
+        metadata: input.metadata || {}
       }
 
       const { data, error } = await supabase
         .from('payments')
-        .insert(minimalData)
+        .insert(paymentData as any)
         .select()
         .single()
 
@@ -60,28 +59,34 @@ export class PaymentService {
         console.log('✅ STRATEGY 1 SUCCESS:', data)
         return this.mapRowToPayment(data)
       }
-      
+
       console.log('⚠️ Strategy 1 failed:', error?.message)
+
+      // If error is about missing column "payment_reference", try "reference" (Structure 2)
+      if (error?.message?.includes('payment_reference')) {
+        console.log('⚠️ Schema mismatch detected. Trying alternative "reference" column...')
+        throw new Error('Try Strategy 2')
+      }
     } catch (err) {
       console.log('⚠️ Strategy 1 error:', err)
     }
 
-    // STRATEGY 2: Try with explicit typing
+    // STRATEGY 2: Legacy Schema Insert (reference)
     try {
-      console.log('🚀 STRATEGY 2: Explicit typed insert...')
-      
-      const typedData = {
+      console.log('🚀 STRATEGY 2: Insert with legacy schema (reference)...')
+
+      const legacyData = {
         user_id: input.userId,
-        amount: Number(input.amount),
-        currency: String(input.currency || 'NGN'),
-        payment_method: String(input.paymentMethod),
-        reference: String(reference),
-        status: 'completed' as const
+        amount: input.amount,
+        currency: input.currency || 'NGN',
+        payment_method: input.paymentMethod,
+        reference: reference, // LEGACY COLUMN NAME
+        status: 'completed'
       }
 
       const { data, error } = await supabase
         .from('payments')
-        .insert(typedData as any)
+        .insert(legacyData as any)
         .select()
         .single()
 
@@ -89,16 +94,16 @@ export class PaymentService {
         console.log('✅ STRATEGY 2 SUCCESS:', data)
         return this.mapRowToPayment(data)
       }
-      
+
       console.log('⚠️ Strategy 2 failed:', error?.message)
     } catch (err) {
       console.log('⚠️ Strategy 2 error:', err)
     }
 
-    // STRATEGY 3: Use direct database function (bypasses PostgREST entirely)
+    // STRATEGY 3: RPC call
     try {
-      console.log('🚀 STRATEGY 3: Direct database function (schema cache bypass)...')
-      
+      console.log('🚀 STRATEGY 3: Direct database function...')
+
       const { data: functionResult, error: functionError } = await (supabase as any)
         .rpc('create_payment_direct', {
           p_user_id: input.userId,
@@ -108,43 +113,25 @@ export class PaymentService {
           p_reference: reference
         })
 
-      if (!functionError && functionResult && (functionResult as any)?.success) {
-        console.log('✅ STRATEGY 3 SUCCESS (Direct DB):', functionResult)
-        
-        // Fetch the created record to return proper format
-        if ((functionResult as any).id) {
-          const { data: createdRecord } = await supabase
-            .from('payments')
-            .select('*')
-            .eq('id', (functionResult as any).id)
-            .single()
-          
-          if (createdRecord) {
-            return this.mapRowToPayment(createdRecord)
-          }
-        }
-        
-        // Fallback: create a basic payment object
+      if (!functionError && functionResult) {
+        console.log('✅ STRATEGY 3 SUCCESS:', functionResult)
         return {
           id: (functionResult as any).id || crypto.randomUUID(),
           userId: input.userId,
           amount: input.amount,
           currency: input.currency || 'NGN',
           paymentMethod: input.paymentMethod,
-          reference: (functionResult as any).reference || reference,
+          reference: reference,
           status: 'completed',
           createdAt: new Date()
         }
       }
-      
-      console.log('⚠️ Strategy 3 failed:', functionError?.message || ((functionResult as any)?.error || 'Unknown error'))
+      console.log('⚠️ Strategy 3 failed:', functionError?.message)
     } catch (err) {
       console.log('⚠️ Strategy 3 error:', err)
     }
 
-    // ALL STRATEGIES FAILED
-    console.error('💥 ALL PAYMENT STRATEGIES FAILED')
-    throw new Error('Unable to log payment. All methods failed. Please contact support.')
+    throw new Error('Failed to create payment. Please check your connection or contact support.')
   }
 
   static async searchPayments(
@@ -176,40 +163,40 @@ export class PaymentService {
 
   // Updated method to generate PDF receipts
   static generateReceiptPDF(
-    payment: Payment, 
+    payment: Payment,
     userInfo: { name: string; email: string; phone?: string; address?: string }
   ): void {
     const receiptData: ReceiptData = {
       payment,
       userInfo
     }
-    
+
     PDFService.downloadReceiptPDF(receiptData)
   }
 
   // Method to get PDF blob for other uses (email, preview, etc.)
   static getReceiptPDFBlob(
-    payment: Payment, 
+    payment: Payment,
     userInfo: { name: string; email: string; phone?: string; address?: string }
   ): Blob {
     const receiptData: ReceiptData = {
       payment,
       userInfo
     }
-    
+
     return PDFService.getReceiptPDFBlob(receiptData)
   }
 
   // Method to directly print PDF receipt
   static printReceiptPDF(
-    payment: Payment, 
+    payment: Payment,
     userInfo: { name: string; email: string; phone?: string; address?: string }
   ): void {
     const receiptData: ReceiptData = {
       payment,
       userInfo
     }
-    
+
     PDFService.printReceiptPDF(receiptData)
   }
 

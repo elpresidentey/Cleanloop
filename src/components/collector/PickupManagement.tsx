@@ -51,7 +51,7 @@ export const PickupManagement: React.FC = () => {
   const handlePickupUpdate = (updatedPickup: PickupRequest) => {
     setData(prev => ({
       ...prev,
-      pickups: prev.pickups.map(pickup => 
+      pickups: prev.pickups.map(pickup =>
         pickup.id === updatedPickup.id ? updatedPickup : pickup
       )
     }))
@@ -95,18 +95,21 @@ export const PickupManagement: React.FC = () => {
     // Date filter
     const now = new Date()
     const pickupDate = pickup.scheduledDate
-    
+
     switch (dateFilter) {
-      case 'today':
+      case 'today': {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
         return pickupDate >= today && pickupDate < tomorrow
-      case 'week':
+      }
+      case 'week': {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
         return pickupDate >= weekAgo
-      case 'month':
+      }
+      case 'month': {
         const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         return pickupDate >= monthAgo
+      }
       case 'all':
       default:
         return true
@@ -217,7 +220,7 @@ export const PickupManagement: React.FC = () => {
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">
               Pickups ({filteredPickups.length})
             </h3>
-            
+
             {filteredPickups.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">

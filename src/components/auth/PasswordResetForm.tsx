@@ -42,7 +42,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.email) {
       setError('Email is required')
       return
@@ -53,7 +53,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
 
     try {
       const result = await PasswordService.requestPasswordReset(formData.email)
-      
+
       if (result.success) {
         setSuccess(true)
       } else {
@@ -68,7 +68,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!accessToken || !refreshToken) {
       setError('Invalid reset link')
       return
@@ -100,7 +100,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
         refreshToken,
         formData.newPassword
       )
-      
+
       if (result.success) {
         setSuccess(true)
         setTimeout(() => {
@@ -118,8 +118,8 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
 
   const generateSecurePassword = () => {
     const newPassword = PasswordService.generateSecurePassword(16)
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       newPassword,
       confirmPassword: newPassword
     }))
@@ -139,7 +139,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
               {mode === 'request' ? 'Reset Email Sent' : 'Password Reset Successfully'}
             </h3>
             <div className="mt-2 text-sm text-green-700">
-              {mode === 'request' 
+              {mode === 'request'
                 ? 'Check your email for password reset instructions.'
                 : 'Your password has been updated. You can now sign in with your new password.'
               }
@@ -178,7 +178,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
-                  We'll send you a link to reset your password.
+                  We&apos;ll send you a link to reset your password.
                 </p>
               </div>
             </>
@@ -218,7 +218,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
                     )}
                   </button>
                 </div>
-                
+
                 <div className="mt-2">
                   <button
                     type="button"
@@ -232,7 +232,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
 
               {/* Password Strength Indicator */}
               {formData.newPassword && (
-                <PasswordStrengthIndicator 
+                <PasswordStrengthIndicator
                   password={formData.newPassword}
                   className="mt-3"
                 />

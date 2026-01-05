@@ -1,9 +1,9 @@
 import { supabase } from '../lib/supabase'
-import { 
-  User, 
-  PickupRequest, 
-  Payment, 
-  Complaint, 
+import {
+  User,
+  PickupRequest,
+  Payment,
+  Complaint,
   Subscription,
   UserRole,
   PickupStatus,
@@ -206,9 +206,10 @@ export class DataRetrievalService {
       query = query.lte('created_at', filters.endDate.toISOString())
     }
 
-    // Apply search across reference field
+    // Apply search across payment_reference field (handles both column naming conventions)
     if (filters.searchTerm) {
-      query = query.ilike('reference', `%${filters.searchTerm}%`)
+      // Try to search in both reference and payment_reference columns
+      query = query.or(`payment_reference.ilike.%${filters.searchTerm}%,reference.ilike.%${filters.searchTerm}%`)
     }
 
     // Apply sorting and pagination
@@ -412,14 +413,14 @@ export class DataRetrievalService {
         .select('*')
         .in('user_id', currentUserIds)
         .eq('status', 'active'),
-      
+
       // Get payment summaries
       supabase
         .from('payments')
         .select('user_id, amount, created_at')
         .in('user_id', currentUserIds)
         .eq('status', 'completed'),
-      
+
       // Get pickup statistics
       supabase
         .from('pickup_requests')
@@ -449,7 +450,7 @@ export class DataRetrievalService {
       const totalPayments = userPayments.reduce((sum: number, payment: any) => sum + payment.amount, 0)
       const lastPayment = userPayments
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-      
+
       const lastPickup = userPickups
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
@@ -504,7 +505,7 @@ export class DataRetrievalService {
     if (dataTypes.includes('pickups')) {
       const pickupFilters: PickupRequestFilters = { searchTerm }
       if (userId) pickupFilters.userId = userId
-      
+
       searchPromises.push(
         this.getPickupRequests(pickupFilters, { page: 1, limit })
           .then(response => ({ type: 'pickups', data: response.data }))
@@ -515,7 +516,7 @@ export class DataRetrievalService {
     if (dataTypes.includes('payments')) {
       const paymentFilters: PaymentFilters = { searchTerm }
       if (userId) paymentFilters.userId = userId
-      
+
       searchPromises.push(
         this.getPayments(paymentFilters, { page: 1, limit })
           .then(response => ({ type: 'payments', data: response.data }))
@@ -526,7 +527,7 @@ export class DataRetrievalService {
     if (dataTypes.includes('complaints')) {
       const complaintFilters: ComplaintFilters = { searchTerm }
       if (userId) complaintFilters.userId = userId
-      
+
       searchPromises.push(
         this.getComplaints(complaintFilters, { page: 1, limit })
           .then(response => ({ type: 'complaints', data: response.data }))
@@ -581,7 +582,8 @@ export class DataRetrievalService {
       amount: row.amount,
       currency: row.currency,
       paymentMethod: row.payment_method,
-      reference: row.reference,
+      // Handle both column naming conventions: payment_reference (new) and reference (legacy)
+      reference: row.payment_reference || row.reference || `PAY-${row.id}`,
       status: row.status,
       createdAt: new Date(row.created_at),
       metadata: row.metadata || undefined

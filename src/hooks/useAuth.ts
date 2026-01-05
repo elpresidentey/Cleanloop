@@ -33,7 +33,7 @@ export const useAuth = () => {
     try {
       // Set a timeout for profile loading to prevent hanging
       const profilePromise = AuthService.getUserProfile(user.id)
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Profile loading timeout')), 3000)
       )
 
@@ -41,35 +41,35 @@ export const useAuth = () => {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          setAuthState(prev => ({ 
-            ...prev, 
-            profile: null, 
+          setAuthState(prev => ({
+            ...prev,
+            profile: null,
             error: null,
             needsProfileSetup: true,
             loading: false
           }))
         } else {
           // Don't block the UI for profile errors - set a default state
-          setAuthState(prev => ({ 
-            ...prev, 
+          setAuthState(prev => ({
+            ...prev,
             profile: null,
             error: null,
             loading: false
           }))
         }
       } else {
-        setAuthState(prev => ({ 
-          ...prev, 
-          profile, 
-          error: null, 
+        setAuthState(prev => ({
+          ...prev,
+          profile,
+          error: null,
           needsProfileSetup: false,
           loading: false
         }))
       }
-    } catch (error) {
+    } catch (_error) {
       // Don't block the UI - just set loading to false
-      setAuthState(prev => ({ 
-        ...prev, 
+      setAuthState(prev => ({
+        ...prev,
         profile: null,
         error: null,
         loading: false
@@ -85,7 +85,7 @@ export const useAuth = () => {
       try {
         // Set a shorter timeout for initial session
         const sessionPromise = AuthService.getSession()
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Session timeout')), 2000)
         )
 
@@ -102,7 +102,7 @@ export const useAuth = () => {
             user: session?.user || null,
             loading: session?.user ? true : false // Keep loading if we have a user to load profile
           }))
-          
+
           // Load user profile if user exists
           if (session?.user) {
             await loadUserProfile(session.user)
@@ -110,7 +110,7 @@ export const useAuth = () => {
             setAuthState(prev => ({ ...prev, loading: false }))
           }
         }
-      } catch (error) {
+      } catch (_error) {
         if (!mounted) return
         // Don't show errors on initial load - just set loading to false
         setAuthState(prev => ({
@@ -161,7 +161,7 @@ export const useAuth = () => {
         setAuthState(prev => ({ ...prev, error: error.message, loading: false }))
         return { user: null, error }
       }
-      
+
       return { user, error: null }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -178,7 +178,7 @@ export const useAuth = () => {
         setAuthState(prev => ({ ...prev, error: error.message, loading: false }))
         return { user: null, error }
       }
-      
+
       return { user, error: null }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'

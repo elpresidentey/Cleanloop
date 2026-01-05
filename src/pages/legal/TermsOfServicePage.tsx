@@ -5,10 +5,10 @@ export const TermsOfServicePage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Terms of Service</h1>
-        
+
         <div className="prose max-w-none space-y-6 text-gray-700">
           <p className="text-sm text-gray-500">Last updated: January 2025</p>
-          
+
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">1. Acceptance of Terms</h2>
             <p>
@@ -34,10 +34,10 @@ export const TermsOfServicePage: React.FC = () => {
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">3. User Accounts</h2>
             <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">3.1 Registration</h3>
             <p>To use certain features of the Platform, you must register for an account and provide accurate, current, and complete information.</p>
-            
+
             <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">3.2 Account Security</h3>
             <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
-            
+
             <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">3.3 User Roles</h3>
             <p>The Platform supports three user roles:</p>
             <ul className="list-disc pl-6 space-y-2">
@@ -115,7 +115,7 @@ export const TermsOfServicePage: React.FC = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">12. Changes to Terms</h2>
             <p>
-              We reserve the right to modify these Terms at any time. We will notify users of any material changes by posting the new Terms on this page and updating the "Last updated" date.
+              We reserve the right to modify these Terms at any time. We will notify users of any material changes by posting the new Terms on this page and updating the &quot;Last updated&quot; date.
             </p>
           </section>
 

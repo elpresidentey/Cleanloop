@@ -24,7 +24,7 @@ export interface PasswordResetRequest {
 export class PasswordService {
   private static readonly MIN_LENGTH = 8
   private static readonly COMMON_PASSWORDS = [
-    'password', '123456', '123456789', 'qwerty', 'abc123', 
+    'password', '123456', '123456789', 'qwerty', 'abc123',
     'password123', 'admin', 'letmein', 'welcome', 'monkey',
     '1234567890', 'password1', '123123', 'qwerty123'
   ]
@@ -69,7 +69,7 @@ export class PasswordService {
     }
 
     // Check for special characters
-    const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    const hasSpecialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
     if (!hasSpecialChars) {
       feedback.push('Password must contain at least one special character (!@#$%^&*)')
     } else {
@@ -78,7 +78,7 @@ export class PasswordService {
 
     // Check for common passwords
     const noCommonPatterns = !this.COMMON_PASSWORDS.includes(password.toLowerCase()) &&
-                            !this.hasCommonPatterns(password)
+      !this.hasCommonPatterns(password)
     if (!noCommonPatterns) {
       feedback.push('Password is too common or predictable')
       score = Math.max(0, score - 2) // Penalize common passwords heavily
@@ -87,13 +87,13 @@ export class PasswordService {
     // Additional strength bonuses
     if (password.length >= 12) score += 1
     if (password.length >= 16) score += 1
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{2,}/.test(password)) score += 1
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{2,}/.test(password)) score += 1
 
     // Cap score at 4
     score = Math.min(4, score)
 
-    const isValid = hasMinLength && hasUppercase && hasLowercase && 
-                   hasNumbers && hasSpecialChars && noCommonPatterns
+    const isValid = hasMinLength && hasUppercase && hasLowercase &&
+      hasNumbers && hasSpecialChars && noCommonPatterns
 
     return {
       isValid,
@@ -115,13 +115,13 @@ export class PasswordService {
    */
   private static hasCommonPatterns(password: string): boolean {
     const lowerPassword = password.toLowerCase()
-    
+
     // Check for sequential characters
     if (/123|abc|qwe|asd|zxc/.test(lowerPassword)) return true
-    
+
     // Check for repeated characters
     if (/(.)\1{2,}/.test(password)) return true
-    
+
     // Check for keyboard patterns
     const keyboardPatterns = ['qwerty', 'asdf', 'zxcv', '1234', 'abcd']
     return keyboardPatterns.some(pattern => lowerPassword.includes(pattern))
@@ -169,8 +169,8 @@ export class PasswordService {
    * Change user password with validation
    */
   static async changePassword(
-    userId: string, 
-    _currentPassword: string, 
+    userId: string,
+    _currentPassword: string,
     newPassword: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
@@ -326,22 +326,22 @@ export class PasswordService {
     const lowercase = 'abcdefghijklmnopqrstuvwxyz'
     const numbers = '0123456789'
     const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?'
-    
+
     const allChars = uppercase + lowercase + numbers + specialChars
-    
+
     let password = ''
-    
+
     // Ensure at least one character from each category
     password += uppercase[Math.floor(Math.random() * uppercase.length)]
     password += lowercase[Math.floor(Math.random() * lowercase.length)]
     password += numbers[Math.floor(Math.random() * numbers.length)]
     password += specialChars[Math.floor(Math.random() * specialChars.length)]
-    
+
     // Fill the rest randomly
     for (let i = 4; i < length; i++) {
       password += allChars[Math.floor(Math.random() * allChars.length)]
     }
-    
+
     // Shuffle the password to avoid predictable patterns
     return password.split('').sort(() => Math.random() - 0.5).join('')
   }

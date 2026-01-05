@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    
+
     this.setState({
       error,
       errorInfo
@@ -74,9 +74,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 Something went wrong
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                We're sorry, but something unexpected happened. Please try again.
+                We&apos;re sorry, but something unexpected happened. Please try again.
               </p>
-              
+
               {import.meta.env.MODE === 'development' && this.state.error && (
                 <details className="mt-4 text-left">
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
@@ -98,7 +98,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </details>
               )}
             </div>
-            
+
             <div className="space-y-4">
               <button
                 onClick={this.handleRetry}
@@ -106,14 +106,14 @@ export class ErrorBoundary extends Component<Props, State> {
               >
                 Try Again
               </button>
-              
+
               <button
                 onClick={() => window.location.reload()}
                 className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Reload Page
               </button>
-              
+
               <button
                 onClick={() => window.location.href = '/'}
                 className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

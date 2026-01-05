@@ -240,7 +240,8 @@ For support, contact: support@cleanloop.ng
       amount: row.amount,
       currency: row.currency,
       paymentMethod: row.payment_method,
-      reference: row.reference || `PAY-${row.id}`, // Fallback reference
+      // Handle both column naming conventions: payment_reference (new) and reference (legacy)
+      reference: (row as any).payment_reference || (row as any).reference || `PAY-${row.id}`,
       status: row.status,
       createdAt: new Date(row.created_at),
       metadata: row.metadata || undefined

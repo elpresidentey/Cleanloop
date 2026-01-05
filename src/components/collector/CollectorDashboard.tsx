@@ -40,7 +40,7 @@ export const CollectorDashboard: React.FC = () => {
 
         // Get today's pickups assigned to this collector
         const todayPickups = await PickupService.getCollectorPickupsForDate(profile.id, new Date())
-        
+
         // Get completion statistics for the last 30 days
         const stats = await PickupService.getCollectorStats(profile.id, 30)
 
@@ -286,9 +286,9 @@ export const CollectorDashboard: React.FC = () => {
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">
-              Today's Pickup Schedule
+              Today&apos;s Pickup Schedule
             </h3>
-            
+
             {data.todayPickups.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">

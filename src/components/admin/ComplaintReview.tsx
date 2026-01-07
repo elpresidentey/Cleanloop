@@ -41,7 +41,7 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({ complaint, onUpdate, onVi
     const diffMs = complaint.resolvedAt.getTime() - complaint.createdAt.getTime()
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffDays = Math.floor(diffHours / 24)
-    
+
     if (diffDays > 0) {
       return `${diffDays} day${diffDays > 1 ? 's' : ''}`
     } else {
@@ -185,7 +185,7 @@ const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({ complaint
     const diffMs = complaint.resolvedAt.getTime() - complaint.createdAt.getTime()
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffDays = Math.floor(diffHours / 24)
-    
+
     if (diffDays > 0) {
       return `${diffDays} day${diffDays > 1 ? 's' : ''}, ${diffHours % 24} hour${(diffHours % 24) > 1 ? 's' : ''}`
     } else {
@@ -364,7 +364,7 @@ export const ComplaintReview: React.FC = () => {
   }) => {
     try {
       const updatedComplaint = await AdminService.updateComplaint(id, updates)
-      setComplaints(complaints.map(complaint => 
+      setComplaints(complaints.map(complaint =>
         complaint.id === id ? updatedComplaint : complaint
       ))
     } catch (err) {
@@ -380,21 +380,23 @@ export const ComplaintReview: React.FC = () => {
     })
     .sort((a, b) => {
       let comparison = 0
-      
+
       switch (sortBy) {
         case 'created':
           comparison = a.createdAt.getTime() - b.createdAt.getTime()
           break
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { high: 3, medium: 2, low: 1 }
           comparison = priorityOrder[a.priority] - priorityOrder[b.priority]
           break
-        case 'status':
+        }
+        case 'status': {
           const statusOrder = { open: 4, in_progress: 3, resolved: 2, closed: 1 }
           comparison = statusOrder[a.status] - statusOrder[b.status]
           break
+        }
       }
-      
+
       return sortOrder === 'asc' ? comparison : -comparison
     })
 
@@ -412,15 +414,15 @@ export const ComplaintReview: React.FC = () => {
   const averageResolutionTime = () => {
     const resolvedComplaints = complaints.filter(c => c.resolvedAt)
     if (resolvedComplaints.length === 0) return 'N/A'
-    
+
     const totalTime = resolvedComplaints.reduce((sum, complaint) => {
       return sum + (complaint.resolvedAt!.getTime() - complaint.createdAt.getTime())
     }, 0)
-    
+
     const avgMs = totalTime / resolvedComplaints.length
     const avgHours = Math.floor(avgMs / (1000 * 60 * 60))
     const avgDays = Math.floor(avgHours / 24)
-    
+
     if (avgDays > 0) {
       return `${avgDays} day${avgDays > 1 ? 's' : ''}`
     } else {

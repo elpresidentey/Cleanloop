@@ -44,7 +44,7 @@ export const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
   const [newUpdatesCount, setNewUpdatesCount] = useState(0);
 
   // Real-time subscription to pickup status updates
-  const statusUpdates = useQuery(api.pickups.getPickupStatusUpdates, 
+  const statusUpdates = useQuery(api.pickups.getPickupStatusUpdates,
     user ? {
       userId: user.role === 'resident' ? user.id : undefined,
       collectorId: user.role === 'collector' ? (collectorId || user.id) : collectorId,
@@ -134,11 +134,10 @@ export const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
           statusUpdates.map((update: StatusUpdate, index: number) => (
             <div
               key={update._id}
-              className={`border-l-4 pl-4 py-3 ${
-                index === 0 && newUpdatesCount > 0
+              className={`border-l-4 pl-4 py-3 ${index === 0 && newUpdatesCount > 0
                   ? 'border-green-400 bg-green-50'
                   : 'border-gray-200'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -168,7 +167,7 @@ export const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
 
               {update.notes && (
                 <div className="mt-2 text-sm text-gray-600 italic">
-                  "{update.notes}"
+                  &quot;{update.notes}&quot;
                 </div>
               )}
 

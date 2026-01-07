@@ -23,7 +23,7 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <HeroSection showActions={false} />
-      
+
       {/* Login Form Section */}
       <div className="relative -mt-20 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -36,22 +36,22 @@ export const LoginPage: React.FC = () => {
                 Access your waste collection management dashboard
               </p>
             </div>
-            
-            <LoginForm 
+
+            <LoginForm
               onSuccess={handleLoginSuccess}
               onError={handleLoginError}
             />
-            
+
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+                  <span className="px-2 bg-white text-gray-500">Don&apos;t have an account?</span>
                 </div>
               </div>
-              
+
               <div className="mt-6">
                 <Link
                   to="/register"

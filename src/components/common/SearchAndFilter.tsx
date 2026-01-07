@@ -115,7 +115,7 @@ export function SearchAndFilter({
           />
         )
 
-      case 'daterange':
+      case 'daterange': {
         const dateRange = value || {}
         return (
           <div key={filter.key} className="space-y-2">
@@ -141,6 +141,7 @@ export function SearchAndFilter({
             />
           </div>
         )
+      }
 
       case 'number':
         return (
@@ -181,9 +182,8 @@ export function SearchAndFilter({
         {filters.length > 0 && (
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              hasActiveFilters ? 'border-blue-500 text-blue-700' : ''
-            }`}
+            className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${hasActiveFilters ? 'border-blue-500 text-blue-700' : ''
+              }`}
           >
             <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />

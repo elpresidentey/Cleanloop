@@ -52,13 +52,14 @@ export const ValidatedDateInput: React.FC<ValidatedDateInputProps> = ({
       case 'pickup':
         validation = validatePickupDate(val)
         break
-      case 'any':
+      case 'any': {
         // Just check if it's a valid date
         const date = new Date(val)
         if (isNaN(date.getTime())) {
           validation = { isValid: false, error: 'Invalid date format' }
         }
         break
+      }
     }
 
     setLocalError(validation.error || '')
@@ -80,14 +81,15 @@ export const ValidatedDateInput: React.FC<ValidatedDateInputProps> = ({
 
   const getMinDate = (): string | undefined => {
     if (minDate) return minDate
-    
+
     switch (type) {
       case 'future':
         return new Date().toISOString().split('T')[0]
-      case 'pickup':
+      case 'pickup': {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
         return tomorrow.toISOString().split('T')[0]
+      }
       default:
         return undefined
     }
@@ -95,16 +97,18 @@ export const ValidatedDateInput: React.FC<ValidatedDateInputProps> = ({
 
   const getMaxDate = (): string | undefined => {
     if (maxDate) return maxDate
-    
+
     switch (type) {
-      case 'future':
+      case 'future': {
         const oneYearFromNow = new Date()
         oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
         return oneYearFromNow.toISOString().split('T')[0]
-      case 'pickup':
+      }
+      case 'pickup': {
         const threeMonthsFromNow = new Date()
         threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3)
         return threeMonthsFromNow.toISOString().split('T')[0]
+      }
       default:
         return undefined
     }
@@ -133,7 +137,7 @@ export const ValidatedDateInput: React.FC<ValidatedDateInputProps> = ({
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      
+
       <input
         type="date"
         id={inputId}
@@ -152,11 +156,11 @@ export const ValidatedDateInput: React.FC<ValidatedDateInputProps> = ({
           ${displayError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
         `}
       />
-      
+
       {helpText && !displayError && (
         <p className="text-xs text-gray-500">{helpText}</p>
       )}
-      
+
       {displayError && (
         <p className="text-sm text-red-600">{displayError}</p>
       )}
@@ -181,7 +185,7 @@ export const ValidatedDateTimeInput: React.FC<ValidatedDateTimeInputProps> = ({
           {props.label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
-        
+
         <input
           type="datetime-local"
           id={`datetime-${props.name}`}
@@ -198,7 +202,7 @@ export const ValidatedDateTimeInput: React.FC<ValidatedDateTimeInputProps> = ({
             ${props.error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
           `}
         />
-        
+
         {props.error && (
           <p className="text-sm text-red-600">{props.error}</p>
         )}

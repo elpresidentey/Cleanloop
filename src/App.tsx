@@ -1,22 +1,37 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { RoleGuard } from './components/auth/RoleGuard'
-import { LoginPage } from './pages/auth/LoginPage'
-import { RegisterPage } from './pages/auth/RegisterPage'
-import { PasswordResetPage } from './pages/auth/PasswordResetPage'
-import { ProfileSetupPage } from './pages/auth/ProfileSetupPage'
-import { TestRegistration } from './pages/TestRegistration'
-import { DashboardPage as ResidentDashboardPage } from './pages/resident/DashboardPage'
-import { CollectorDashboardPage, PickupManagementPage, CustomerManagementPage } from './pages/collector'
-import { AdminDashboardPage } from './pages/admin/DashboardPage'
-import { AuditTrailPage } from './pages/admin/AuditTrailPage'
-import { PickupRequestPage } from './pages/resident/PickupRequestPage'
-import { PaymentHistoryPage } from './pages/resident/PaymentHistoryPage'
-import { ComplaintsPage } from './pages/resident/ComplaintsPage'
-import { SubscriptionPage } from './pages/resident/SubscriptionPage'
-import { LocationManagementPage } from './pages/resident/LocationManagementPage'
+import { FastLoader } from './components/common/FastLoader'
 import { useAuth } from './hooks/useAuth'
+
+// Lazy load pages for better performance
+const LoginPage = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })))
+const PasswordResetPage = lazy(() => import('./pages/auth/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })))
+const ProfileSetupPage = lazy(() => import('./pages/auth/ProfileSetupPage').then(m => ({ default: m.ProfileSetupPage })))
+const TestRegistration = lazy(() => import('./pages/TestRegistration').then(m => ({ default: m.TestRegistration })))
+const PrivacyPolicyPage = lazy(() => import('./pages/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })))
+const TermsOfServicePage = lazy(() => import('./pages/legal/TermsOfServicePage').then(m => ({ default: m.TermsOfServicePage })))
+const ResidentDashboardPage = lazy(() => import('./pages/resident/DashboardPage').then(m => ({ default: m.DashboardPage })))
+const PickupRequestPage = lazy(() => import('./pages/resident/PickupRequestPage').then(m => ({ default: m.PickupRequestPage })))
+const PaymentHistoryPage = lazy(() => import('./pages/resident/PaymentHistoryPage').then(m => ({ default: m.PaymentHistoryPage })))
+const ComplaintsPage = lazy(() => import('./pages/resident/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })))
+const SubscriptionPage = lazy(() => import('./pages/resident/SubscriptionPage').then(m => ({ default: m.SubscriptionPage })))
+const LocationManagementPage = lazy(() => import('./pages/resident/LocationManagementPage').then(m => ({ default: m.LocationManagementPage })))
+
+// Collector pages
+const { CollectorDashboardPage: CollectorDashboardPageLazy, PickupManagementPage: PickupManagementPageLazy, CustomerManagementPage: CustomerManagementPageLazy } = {
+  CollectorDashboardPage: lazy(() => import('./pages/collector').then(m => ({ default: m.CollectorDashboardPage }))),
+  PickupManagementPage: lazy(() => import('./pages/collector').then(m => ({ default: m.PickupManagementPage }))),
+  CustomerManagementPage: lazy(() => import('./pages/collector').then(m => ({ default: m.CustomerManagementPage })))
+}
+const CollectorDashboardPage = CollectorDashboardPageLazy
+const PickupManagementPage = PickupManagementPageLazy
+const CustomerManagementPage = CustomerManagementPageLazy
+
+const AdminDashboardPage = lazy(() => import('./pages/admin/DashboardPage').then(m => ({ default: m.AdminDashboardPage })))
+const AuditTrailPage = lazy(() => import('./pages/admin/AuditTrailPage').then(m => ({ default: m.AuditTrailPage })))
 
 const DashboardRedirect: React.FC = () => {
   const { profile, loading, needsProfileSetup, user } = useAuth()
@@ -83,13 +98,16 @@ function App() {
         v7_relativeSplatPath: true
       }}
     >
-      <Routes>
+      <Suspense fallback={<FastLoader />}>
+        <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/reset-password" element={<PasswordResetPage />} />
         <Route path="/profile-setup" element={<ProfileSetupPage />} />
         <Route path="/test-registration" element={<TestRegistration />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         
         {/* Protected routes */}
         <Route path="/" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
@@ -213,7 +231,8 @@ function App() {
         
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   )
 }

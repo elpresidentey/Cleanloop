@@ -56,7 +56,7 @@ export class PickupService {
    * This method will work regardless of schema cache issues
    */
   static async create(input: CreatePickupRequestInput): Promise<PickupRequest> {
-    console.log('🚀 BULLETPROOF PICKUP CREATION WITH FALLBACK - FINAL VERSION')
+    console.log('🚀 PICKUP CREATION - FIXED SCHEMA VERSION')
     console.log('Input received:', JSON.stringify(input, null, 2))
 
     // BULLETPROOF: Always provide safe fallback values
@@ -64,23 +64,24 @@ export class PickupService {
     const safeStreet = this.getSafeValue(input.location?.street, 'Marina Street')
     const safeHouseNumber = this.getSafeValue(input.location?.houseNumber, '123')
     const safeAddress = `${safeHouseNumber} ${safeStreet}, ${safeArea}`
-    
-    console.log('🛡️ SAFE VALUES GUARANTEED:', { safeArea, safeStreet, safeHouseNumber, safeAddress })
-    
-    // STRATEGY 1: Try minimal insert (let triggers handle location)
+
+    // STRATEGY 1: Correct Schema Insert (pickup_address only)
     try {
-      console.log('🚀 STRATEGY 1: Minimal insert with triggers...')
-      
-      const minimalData: any = {
+      console.log('🚀 STRATEGY 1: Insert with correct schema (pickup_address)...')
+
+      // Note: passing area, street, house_number if the column DOES NOT exist will fail.
+      // So we use pickup_address which is in the schema.
+      const pickupData: any = {
         user_id: input.userId,
         scheduled_date: input.scheduledDate.toISOString().split('T')[0],
         notes: input.notes || null,
-        status: 'requested'
+        status: 'requested',
+        pickup_address: safeAddress
       }
 
       const { data, error } = await supabase
         .from('pickup_requests')
-        .insert(minimalData)
+        .insert(pickupData as any)
         .select()
         .single()
 
@@ -88,17 +89,17 @@ export class PickupService {
         console.log('✅ STRATEGY 1 SUCCESS:', data)
         return this.mapRowToPickupRequest(data)
       }
-      
+
       console.log('⚠️ Strategy 1 failed:', error?.message)
     } catch (err) {
       console.log('⚠️ Strategy 1 error:', err)
     }
 
-    // STRATEGY 2: Try full insert with explicit location data
+    // STRATEGY 2: Legacy Schema Insert (area, street, house_number)
     try {
-      console.log('🚀 STRATEGY 2: Full insert with location data...')
-      
-      const fullData: any = {
+      console.log('🚀 STRATEGY 2: Insert with legacy schema (area/street)...')
+
+      const legacyData: any = {
         user_id: input.userId,
         scheduled_date: input.scheduledDate.toISOString().split('T')[0],
         notes: input.notes || null,
@@ -111,7 +112,7 @@ export class PickupService {
 
       const { data, error } = await supabase
         .from('pickup_requests')
-        .insert(fullData)
+        .insert(legacyData as any)
         .select()
         .single()
 
@@ -119,40 +120,26 @@ export class PickupService {
         console.log('✅ STRATEGY 2 SUCCESS:', data)
         return this.mapRowToPickupRequest(data)
       }
-      
+
       console.log('⚠️ Strategy 2 failed:', error?.message)
     } catch (err) {
       console.log('⚠️ Strategy 2 error:', err)
     }
 
-    // STRATEGY 3: Use direct database function (bypasses PostgREST entirely)
+    // STRATEGY 3: RPC
     try {
-      console.log('🚀 STRATEGY 3: Direct database function (schema cache bypass)...')
-      
+      console.log('🚀 STRATEGY 3: Direct database function...')
+
       const { data: functionResult, error: functionError } = await (supabase as any)
         .rpc('create_pickup_request_direct', {
           p_user_id: input.userId,
           p_scheduled_date: input.scheduledDate.toISOString().split('T')[0],
-          p_notes: input.notes || null
+          p_notes: input.notes || null,
+          p_pickup_address: safeAddress
         })
 
-      if (!functionError && functionResult && (functionResult as any)?.success) {
-        console.log('✅ STRATEGY 3 SUCCESS (Direct DB):', functionResult)
-        
-        // Fetch the created record to return proper format
-        if ((functionResult as any).id) {
-          const { data: createdRecord } = await supabase
-            .from('pickup_requests')
-            .select('*')
-            .eq('id', (functionResult as any).id)
-            .single()
-          
-          if (createdRecord) {
-            return this.mapRowToPickupRequest(createdRecord)
-          }
-        }
-        
-        // Fallback: create a basic pickup request object
+      if (!functionError && functionResult) {
+        console.log('✅ STRATEGY 3 SUCCESS:', functionResult)
         return {
           id: (functionResult as any).id || crypto.randomUUID(),
           userId: input.userId,
@@ -168,15 +155,13 @@ export class PickupService {
           }
         }
       }
-      
-      console.log('⚠️ Strategy 3 failed:', functionError?.message || ((functionResult as any)?.error || 'Unknown error'))
+
+      console.log('⚠️ Strategy 3 failed:', functionError?.message)
     } catch (err) {
       console.log('⚠️ Strategy 3 error:', err)
     }
 
-    // ALL STRATEGIES FAILED
-    console.error('💥 ALL STRATEGIES FAILED - This should not happen')
-    throw new Error('Unable to create pickup request. All methods failed. Please contact support.')
+    throw new Error('Unable to create pickup request. Please try again or contact support.')
   }
 
   /**
@@ -248,7 +233,7 @@ export class PickupService {
   static async getCollectorPickupsForDate(collectorId: string, date: Date): Promise<PickupRequest[]> {
     const startOfDay = new Date(date)
     startOfDay.setHours(0, 0, 0, 0)
-    
+
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
 
@@ -320,7 +305,7 @@ export class PickupService {
 
   static async updateLocationForFuturePickups(userId: string, newLocation: { area: string; street: string; houseNumber: string; coordinates?: [number, number] }): Promise<void> {
     const now = new Date()
-    
+
     const updateData: any = {
       pickup_address: `${newLocation.area}, ${newLocation.street} ${newLocation.houseNumber}`,
       updated_at: now.toISOString()

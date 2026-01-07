@@ -356,6 +356,7 @@ export class AuthService {
       const { profile } = await this.getUserProfile(userId)
       return profile?.role === role || false
     } catch (error) {
+      console.warn('Role check error:', error)
       return false
     }
   }

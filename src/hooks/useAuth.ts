@@ -66,8 +66,9 @@ export const useAuth = () => {
           loading: false
         }))
       }
-    } catch (_error) {
+    } catch (error) {
       // Don't block the UI - just set loading to false
+      console.warn('Profile loading error:', error)
       setAuthState(prev => ({
         ...prev,
         profile: null,
@@ -110,9 +111,10 @@ export const useAuth = () => {
             setAuthState(prev => ({ ...prev, loading: false }))
           }
         }
-      } catch (_error) {
+      } catch (error) {
         if (!mounted) return
         // Don't show errors on initial load - just set loading to false
+        console.warn('Session loading error:', error)
         setAuthState(prev => ({
           ...prev,
           error: null,

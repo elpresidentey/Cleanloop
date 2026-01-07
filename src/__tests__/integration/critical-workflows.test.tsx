@@ -730,13 +730,18 @@ describe('Critical Workflow Integration Tests', () => {
       // Should handle unauthenticated state
       await waitFor(() => {
         // Look for login/auth related content or redirect
-        screen.queryAllByText(/sign in/i)[0] ||
+        const authElement = screen.queryAllByText(/sign in/i)[0] ||
                           screen.queryByText(/login/i) ||
                           screen.queryByText(/auth/i) ||
                           screen.queryByText(/welcome/i)
         
         // If no auth content found, at least verify the app doesn't crash
         expect(document.body).toBeInTheDocument()
+        
+        // Use the auth element to avoid unused expression warning
+        if (authElement) {
+          expect(authElement).toBeInTheDocument()
+        }
       })
     })
 

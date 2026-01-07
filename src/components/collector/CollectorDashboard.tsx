@@ -179,7 +179,7 @@ export const CollectorDashboard: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Today's Pickups</dt>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Today&apos;s Pickups</dt>
                     <dd className="text-lg font-medium text-gray-900">{data.todayPickups.length} scheduled</dd>
                   </dl>
                 </div>
@@ -242,7 +242,7 @@ export const CollectorDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Today's Pickups */}
+        {/* Today&apos;s Pickups */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -282,7 +282,7 @@ export const CollectorDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Today's Pickups */}
+        {/* Today&apos;s Pickups */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">

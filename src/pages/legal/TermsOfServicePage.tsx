@@ -12,7 +12,7 @@ export const TermsOfServicePage: React.FC = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using CleanLoop Platform ("the Platform"), you accept and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Platform.
+              By accessing and using CleanLoop Platform (&quot;the Platform&quot;), you accept and agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, please do not use our Platform.
             </p>
           </section>
 

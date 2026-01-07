@@ -89,6 +89,7 @@ export const validateFutureDate = (date: Date | string): { isValid: boolean; err
 
     return { isValid: true }
   } catch (error) {
+    console.warn('Date validation error:', error)
     return { isValid: false, error: 'Invalid date format' }
   }
 }
@@ -122,7 +123,8 @@ export const validatePickupDate = (date: Date | string): { isValid: boolean; err
     }
 
     return { isValid: true }
-  } catch (_error) {
+  } catch (error) {
+    console.warn('Pickup date validation error:', error)
     return { isValid: false, error: 'Invalid date format' }
   }
 }

@@ -14,7 +14,7 @@ describe('DataRetrievalService Property Tests', () => {
     // This test validates that the DataRetrievalService exists and has the expected methods
     // The actual implementation is already tested through integration tests
     
-    const { DataRetrievalService } = require('../dataRetrievalService')
+    const { DataRetrievalService } = await import('../dataRetrievalService')
     
     // Verify the service has all required methods for data retrieval
     expect(typeof DataRetrievalService.getPickupRequests).toBe('function')

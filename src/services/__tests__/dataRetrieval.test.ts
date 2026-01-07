@@ -10,7 +10,7 @@ describe('DataRetrievalService Property Tests', () => {
    * For any user data request (pickup history, payment history, customer lists), 
    * the system should return all relevant records with complete information
    */
-  it('should validate data retrieval completeness property', () => {
+  it('should validate data retrieval completeness property', async () => {
     // This test validates that the DataRetrievalService exists and has the expected methods
     // The actual implementation is already tested through integration tests
     

@@ -204,7 +204,6 @@ export class AuthService {
         console.error('Supabase error:', error)
         return { profile: null, error }
       }
-      }
 
       if (!data) {
         return { profile: null, error: 'User not found' }

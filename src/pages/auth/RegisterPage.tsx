@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { RegistrationForm } from '../../components/auth/RegistrationForm'
 import { useAuth } from '../../hooks/useAuth'
 import { HeroSection } from '../../components/common/HeroSection'
+import { PublicNavbar } from '../../components/layout/PublicNavbar'
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -20,6 +21,9 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Public Navigation with Sign In button */}
+      <PublicNavbar />
+      
       {/* Hero Section */}
       <HeroSection showActions={false} />
       

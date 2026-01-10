@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { LoginForm } from '../../components/auth/LoginForm'
 import { useAuth } from '../../hooks/useAuth'
 import { HeroSection } from '../../components/common/HeroSection'
+import { PublicNavbar } from '../../components/layout/PublicNavbar'
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -21,6 +22,9 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Public Navigation with Sign Up button */}
+      <PublicNavbar />
+      
       {/* Hero Section */}
       <HeroSection showActions={false} />
 

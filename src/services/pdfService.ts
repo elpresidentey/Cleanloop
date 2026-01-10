@@ -27,105 +27,78 @@ export class PDFService {
     website: 'www.cleanloop.ng'
   }
 
-  // Helper function to draw modern card (simplified rounded rectangle effect)
-  private static drawModernCard(
-    doc: jsPDF,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fillColor: [number, number, number],
-    borderColor: [number, number, number] | null = null
-  ): void {
-    // Fill
-    doc.setFillColor(...fillColor)
-    doc.rect(x, y, width, height, 'F')
-    
-    // Border if specified
-    if (borderColor) {
-      doc.setDrawColor(...borderColor)
-      doc.setLineWidth(0.5)
-      doc.rect(x, y, width, height, 'S')
-    }
-  }
-
   static generateReceiptPDF(data: ReceiptData): jsPDF {
     const doc = new jsPDF()
     const { payment, userInfo } = data
     const companyInfo = data.companyInfo || this.COMPANY_INFO
 
-    // Premium color palette
-    const primaryColor: [number, number, number] = [16, 185, 129] // Emerald-500
-    const primaryDark: [number, number, number] = [5, 150, 105] // Emerald-600
-    const secondaryColor: [number, number, number] = [71, 85, 105] // Slate-600
-    const lightGray: [number, number, number] = [248, 250, 252] // Slate-50
-    const borderGray: [number, number, number] = [226, 232, 240] // Slate-200
-    const accentBlue: [number, number, number] = [59, 130, 246] // Blue-500
-    const textDark: [number, number, number] = [15, 23, 42] // Slate-900
+    // Modern, professional color palette
+    const primaryGreen: [number, number, number] = [16, 185, 129] // Emerald-500
+    const darkGreen: [number, number, number] = [5, 150, 105] // Emerald-600
+    const textDark: [number, number, number] = [17, 24, 39] // Gray-900
+    const textGray: [number, number, number] = [75, 85, 99] // Gray-600
+    const borderGray: [number, number, number] = [229, 231, 235] // Gray-200
+    const bgLight: [number, number, number] = [249, 250, 251] // Gray-50
 
     // Page dimensions
     const pageWidth = doc.internal.pageSize.width
     const pageHeight = doc.internal.pageSize.height
-    const margin = 20
-    let yPosition = 15
+    const margin = 25
+    let yPosition = 20
 
-    // Premium Header with elegant design
-    doc.setFillColor(...primaryDark)
-    doc.rect(0, 0, pageWidth, 60, 'F')
-    
-    // Accent stripe
-    doc.setFillColor(...primaryColor)
-    doc.rect(0, 0, pageWidth, 4, 'F')
+    // Modern Header with gradient effect
+    doc.setFillColor(...primaryGreen)
+    doc.rect(0, 0, pageWidth, 50, 'F')
 
-    // Company name - larger and more prominent
+    // Subtle accent line
+    doc.setFillColor(...darkGreen)
+    doc.rect(0, 0, pageWidth, 3, 'F')
+
+    // Company name - larger, more prominent
     doc.setTextColor(255, 255, 255)
-    doc.setFontSize(32)
+    doc.setFontSize(28)
     doc.setFont('helvetica', 'bold')
-    doc.text(String(companyInfo.name), margin, 35)
-    
-    // Elegant tagline
-    doc.setFontSize(11)
+    doc.text(companyInfo.name, margin, 28)
+
+    // Tagline - elegant spacing
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(209, 250, 229) // Emerald-100
-    doc.text('Sustainable Waste Management Solutions', margin, 43)
-    
-    // Premium receipt badge with better styling
-    const badgeWidth = 65
-    const badgeHeight = 25
+    doc.setTextColor(220, 252, 231) // Lighter green for tagline
+    doc.text('Sustainable Waste Management Solutions', margin, 38)
+
+    // Receipt badge - modern design with better positioning
+    const badgeWidth = 60
+    const badgeHeight = 18
     const badgeX = pageWidth - margin - badgeWidth
-    const badgeY = 20
+    const badgeY = 18
     
+    // Badge background
     doc.setFillColor(255, 255, 255)
     doc.rect(badgeX, badgeY, badgeWidth, badgeHeight, 'F')
-    doc.setDrawColor(...primaryColor)
-    doc.setLineWidth(1.5)
+    
+    // Badge border
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(1)
     doc.rect(badgeX, badgeY, badgeWidth, badgeHeight, 'S')
     
-    doc.setTextColor(...primaryDark)
-    doc.setFontSize(12)
+    // Badge text
+    doc.setTextColor(...primaryGreen)
+    doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
-    doc.text('RECEIPT', badgeX + badgeWidth / 2, badgeY + 16, { align: 'center' })
+    doc.text('RECEIPT', badgeX + badgeWidth / 2, badgeY + 13, { align: 'center' })
 
-    yPosition = 80
+    yPosition = 65
 
-    // Premium Receipt Info Card with better spacing
-    this.drawModernCard(doc, margin, yPosition, pageWidth - 2 * margin, 40, lightGray, borderGray)
+    // Receipt Information Section - Modern card design
+    doc.setFillColor(...bgLight)
+    doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 30, 'F')
     
-    // Elegant section header
-    doc.setFillColor(...primaryDark)
-    doc.rect(margin + 1, yPosition + 1, pageWidth - 2 * margin - 2, 10, 'F')
-    
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('RECEIPT INFORMATION', margin + 10, yPosition + 8)
-    
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
-    doc.setTextColor(...textDark)
-    
+    doc.setDrawColor(...borderGray)
+    doc.setLineWidth(0.5)
+    doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 30, 'S')
+
+    const receiptId = String(payment.id).substring(0, 8).toUpperCase()
     const receiptDate = new Intl.DateTimeFormat('en-NG', {
-      weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -133,259 +106,283 @@ export class PDFService {
       minute: '2-digit'
     }).format(payment.createdAt)
 
-    const receiptId = String(payment.id).substring(0, 8).toUpperCase()
-    
-    // Better formatted info
-    doc.setFont('helvetica', 'bold')
-    doc.text('Receipt ID:', margin + 10, yPosition + 22)
+    // Left side - Receipt ID and Date
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...secondaryColor)
-    doc.text(receiptId, margin + 50, yPosition + 22)
+    doc.setTextColor(...textGray)
+    doc.text('Receipt ID', margin, yPosition)
     
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...textDark)
-    doc.text('Date:', margin + 10, yPosition + 32)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...secondaryColor)
-    doc.text(String(receiptDate), margin + 50, yPosition + 32)
+    doc.setFontSize(10)
+    doc.text(receiptId, margin + 25, yPosition)
     
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...textDark)
-    doc.text('Reference:', pageWidth - margin - 10, yPosition + 22, { align: 'right' })
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...secondaryColor)
-    doc.text(String(payment.reference), pageWidth - margin - 10, yPosition + 22, { align: 'right' })
+    doc.setTextColor(...textGray)
+    doc.text('Date', margin, yPosition + 8)
     
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...textDark)
-    doc.text('Status:', pageWidth - margin - 10, yPosition + 32, { align: 'right' })
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...primaryDark)
-    doc.setFont('helvetica', 'bold')
-    doc.text(String(payment.status).toUpperCase(), pageWidth - margin - 10, yPosition + 32, { align: 'right' })
+    doc.setTextColor(...textDark)
+    doc.text(receiptDate, margin + 25, yPosition + 8)
 
-    yPosition += 55
-
-    // Premium Customer Information Card
-    const cardWidth = (pageWidth - 2 * margin - 10) / 2
-    this.drawModernCard(doc, margin, yPosition, cardWidth, 55, lightGray, borderGray)
+    // Right side - Reference and Status
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...textGray)
+    doc.text('Reference', pageWidth - margin, yPosition, { align: 'right' })
     
-    doc.setFillColor(...primaryDark)
-    doc.rect(margin + 1, yPosition + 1, cardWidth - 2, 11, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...textDark)
+    doc.setFontSize(9)
+    doc.text(payment.reference, pageWidth - margin, yPosition + 4, { align: 'right' })
+    
+    // Status badge - modern pill shape
+    const statusWidth = 40
+    const statusHeight = 10
+    const statusX = pageWidth - margin - statusWidth
+    const statusY = yPosition + 11
+    
+    doc.setFillColor(...primaryGreen)
+    doc.rect(statusX, statusY, statusWidth, statusHeight, 'F')
     
     doc.setTextColor(255, 255, 255)
-    doc.setFontSize(12)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
+    doc.text(payment.status.toUpperCase(), statusX + statusWidth / 2, statusY + 7, { align: 'center' })
+
+    yPosition += 40
+
+    // Customer and Company Information - Modern side-by-side cards
+    const cardWidth = (pageWidth - 2 * margin - 20) / 2
+    const cardHeight = 60
+
+    // Billed To Card
+    doc.setFillColor(255, 255, 255)
+    doc.rect(margin, yPosition, cardWidth, cardHeight, 'F')
+    
+    doc.setDrawColor(...borderGray)
+    doc.setLineWidth(1)
+    doc.rect(margin, yPosition, cardWidth, cardHeight, 'S')
+    
+    // Card header with accent
+    doc.setFillColor(...bgLight)
+    doc.rect(margin, yPosition, cardWidth, 12, 'F')
+    
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...textGray)
     doc.text('BILLED TO', margin + 10, yPosition + 9)
     
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(11)
+    // Customer name
+    doc.setFontSize(12)
     doc.setTextColor(...textDark)
-    
     doc.setFont('helvetica', 'bold')
-    doc.text(String(userInfo.name), margin + 10, yPosition + 22)
+    doc.text(userInfo.name, margin + 10, yPosition + 25)
     
-    doc.setFont('helvetica', 'normal')
+    // Customer details
     doc.setFontSize(9)
-    doc.setTextColor(...secondaryColor)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...textGray)
     
-    let customerY = yPosition + 30
-    doc.text(String(userInfo.email), margin + 10, customerY)
+    let detailY = yPosition + 33
+    doc.text(userInfo.email, margin + 10, detailY)
     
     if (userInfo.phone) {
-      customerY += 8
-      doc.text(String(userInfo.phone), margin + 10, customerY)
+      detailY += 8
+      doc.text(userInfo.phone, margin + 10, detailY)
     }
     
     if (userInfo.address) {
-      customerY += 8
-      const addressLines = doc.splitTextToSize(String(userInfo.address), cardWidth - 20)
-      doc.text(addressLines, margin + 10, customerY)
+      detailY += 8
+      const addressLines = doc.splitTextToSize(userInfo.address, cardWidth - 20)
+      doc.text(addressLines, margin + 10, detailY)
     }
 
-    // Premium Company Information Card
-    const companyCardX = margin + cardWidth + 10
-    this.drawModernCard(doc, companyCardX, yPosition, cardWidth, 55, lightGray, borderGray)
+    // Company Card
+    const companyCardX = margin + cardWidth + 20
+    doc.setFillColor(255, 255, 255)
+    doc.rect(companyCardX, yPosition, cardWidth, cardHeight, 'F')
     
-    doc.setFillColor(...accentBlue)
-    doc.rect(companyCardX + 1, yPosition + 1, cardWidth - 2, 11, 'F')
+    doc.setDrawColor(...borderGray)
+    doc.setLineWidth(1)
+    doc.rect(companyCardX, yPosition, cardWidth, cardHeight, 'S')
     
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(12)
+    // Card header with accent
+    doc.setFillColor(...bgLight)
+    doc.rect(companyCardX, yPosition, cardWidth, 12, 'F')
+    
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...textGray)
     doc.text('FROM', companyCardX + 10, yPosition + 9)
     
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(11)
+    // Company name
+    doc.setFontSize(12)
     doc.setTextColor(...textDark)
-    
     doc.setFont('helvetica', 'bold')
-    doc.text(String(companyInfo.name), companyCardX + 10, yPosition + 22)
+    doc.text(companyInfo.name, companyCardX + 10, yPosition + 25)
     
-    doc.setFont('helvetica', 'normal')
+    // Company details
     doc.setFontSize(9)
-    doc.setTextColor(...secondaryColor)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...textGray)
     
-    let companyY = yPosition + 30
-    doc.text(String(companyInfo.address), companyCardX + 10, companyY)
-    companyY += 8
-    doc.text(String(companyInfo.phone), companyCardX + 10, companyY)
-    companyY += 8
-    doc.text(String(companyInfo.email), companyCardX + 10, companyY)
+    detailY = yPosition + 33
+    doc.text(companyInfo.address, companyCardX + 10, detailY)
+    detailY += 8
+    doc.text(companyInfo.phone, companyCardX + 10, detailY)
+    detailY += 8
+    doc.text(companyInfo.email, companyCardX + 10, detailY)
 
-    yPosition += 70
+    yPosition += cardHeight + 25
 
-    // Premium Payment Details Section
-    doc.setFillColor(...primaryDark)
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, 12, 'F')
-    
-    doc.setTextColor(255, 255, 255)
+    // Payment Details Section - Modern table design
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('PAYMENT DETAILS', margin + 10, yPosition + 9)
+    doc.setTextColor(...textDark)
+    doc.text('Payment Details', margin, yPosition)
 
-    yPosition += 20
+    yPosition += 12
 
-    // Premium table with elegant styling
+    // Modern table with better styling
     const tableData = [
-      { label: 'Description', value: 'CleanLoop Waste Collection Service', highlight: false },
-      { label: 'Payment Method', value: String(payment.paymentMethod).toUpperCase().replace('_', ' '), highlight: false },
-      { label: 'Currency', value: String(payment.currency), highlight: false }
+      { label: 'Description', value: 'CleanLoop Waste Collection Service' },
+      { label: 'Payment Method', value: String(payment.paymentMethod).toUpperCase().replace('_', ' ') },
+      { label: 'Currency', value: String(payment.currency) }
     ]
 
-    doc.setFontSize(10)
+    // Table container
+    doc.setFillColor(255, 255, 255)
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, tableData.length * 16 + 4, 'F')
+    
     doc.setDrawColor(...borderGray)
-    doc.setLineWidth(0.5)
+    doc.setLineWidth(1)
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, tableData.length * 16 + 4, 'S')
+
+    doc.setFontSize(9)
+    doc.setDrawColor(...borderGray)
+    doc.setLineWidth(0.3)
 
     tableData.forEach((row, index) => {
-      const rowY = yPosition + (index * 16)
+      const rowY = yPosition + 2 + (index * 16)
       
       // Alternating row background
       if (index % 2 === 0) {
-        doc.setFillColor(...lightGray)
-        doc.rect(margin, rowY - 5, pageWidth - 2 * margin, 14, 'F')
+        doc.setFillColor(...bgLight)
+        doc.rect(margin + 1, rowY - 6, pageWidth - 2 * margin - 2, 14, 'F')
       }
       
-      // Elegant border line
-      doc.setDrawColor(...borderGray)
-      doc.line(margin, rowY + 5, pageWidth - margin, rowY + 5)
-      
+      // Label
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...textDark)
-      doc.text(row.label + ':', margin + 10, rowY + 3)
+      doc.text(`${row.label}:`, margin + 8, rowY)
       
+      // Value
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(...secondaryColor)
-      doc.text(String(row.value), margin + 75, rowY + 3)
+      doc.setTextColor(...textGray)
+      doc.text(String(row.value), margin + 55, rowY)
+      
+      // Row divider
+      if (index < tableData.length - 1) {
+        doc.setDrawColor(...borderGray)
+        doc.line(margin + 5, rowY + 3, pageWidth - margin - 5, rowY + 3)
+      }
     })
 
     yPosition += tableData.length * 16 + 20
 
-    // Premium Total Amount Box - more prominent
-    doc.setFillColor(...primaryDark)
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, 35, 'F')
+    // Total Amount - Modern prominent design
+    doc.setFillColor(...primaryGreen)
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, 30, 'F')
     
-    // Elegant double border
-    doc.setDrawColor(...primaryColor)
-    doc.setLineWidth(2.5)
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, 35, 'S')
-    
-    // Inner highlight
-    doc.setDrawColor(255, 255, 255)
+    // Subtle border
+    doc.setDrawColor(...darkGreen)
     doc.setLineWidth(1)
-    doc.rect(margin + 2, yPosition + 2, pageWidth - 2 * margin - 4, 31, 'S')
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, 30, 'S')
     
     doc.setTextColor(255, 255, 255)
-    doc.setFontSize(13)
-    doc.setFont('helvetica', 'normal')
-    doc.text('TOTAL AMOUNT PAID', margin + 15, yPosition + 12)
-    
-    doc.setFontSize(28)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`₦${payment.amount.toLocaleString()}`, pageWidth - margin - 15, yPosition + 22, { align: 'right' })
-    
-    // Currency indicator with better styling
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(209, 250, 229) // Emerald-100
-    doc.text(String(payment.currency), pageWidth - margin - 15, yPosition + 30, { align: 'right' })
+    doc.text('TOTAL AMOUNT PAID', margin + 12, yPosition + 10)
+    
+    doc.setFontSize(26)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`₦${payment.amount.toLocaleString()}`, pageWidth - margin - 12, yPosition + 22, { align: 'right' })
 
-    yPosition += 50
+    yPosition += 45
 
-    // Premium Additional notes section
+    // Additional Notes Section (if any)
     if (payment.metadata?.notes) {
       const notes = typeof payment.metadata.notes === 'string' ? payment.metadata.notes : String(payment.metadata.notes)
       const splitNotes = doc.splitTextToSize(notes, pageWidth - 2 * margin - 20)
       const notesHeight = splitNotes.length * 6 + 25
       
-      this.drawModernCard(doc, margin, yPosition, pageWidth - 2 * margin, notesHeight, lightGray, borderGray)
+      doc.setFillColor(255, 255, 255)
+      doc.rect(margin, yPosition, pageWidth - 2 * margin, notesHeight, 'F')
       
-      doc.setFillColor(...accentBlue)
-      doc.rect(margin + 1, yPosition + 1, pageWidth - 2 * margin - 2, 11, 'F')
+      doc.setDrawColor(...borderGray)
+      doc.setLineWidth(1)
+      doc.rect(margin, yPosition, pageWidth - 2 * margin, notesHeight, 'S')
       
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(11)
+      // Notes header
+      doc.setFillColor(...bgLight)
+      doc.rect(margin, yPosition, pageWidth - 2 * margin, 12, 'F')
+      
+      doc.setFontSize(9)
       doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...textGray)
       doc.text('ADDITIONAL NOTES', margin + 10, yPosition + 9)
       
+      // Notes content
+      doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(10)
-      doc.setTextColor(...secondaryColor)
+      doc.setTextColor(...textDark)
       doc.text(splitNotes, margin + 10, yPosition + 22)
       
       yPosition += notesHeight + 15
     }
 
-    // Premium Footer with elegant design
-    const footerY = pageHeight - 60
+    // Modern Footer Design
+    const footerY = pageHeight - 65
     
-    // Decorative separator line
-    doc.setDrawColor(...primaryColor)
-    doc.setLineWidth(2)
-    doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8)
-    
-    // Thin accent line
+    // Decorative top border
     doc.setDrawColor(...borderGray)
-    doc.setLineWidth(0.5)
-    doc.line(margin, footerY - 6, pageWidth - margin, footerY - 6)
-    
-    // Thank you message - more elegant
-    doc.setTextColor(...primaryDark)
+    doc.setLineWidth(1)
+    doc.line(margin, footerY - 20, pageWidth - margin, footerY - 20)
+
+    // Thank you message - prominent
+    doc.setTextColor(...textDark)
     doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
-    doc.text('Thank you for choosing CleanLoop!', pageWidth / 2, footerY, { align: 'center' })
+    doc.text('Thank you for choosing CleanLoop!', pageWidth / 2, footerY - 10, { align: 'center' })
     
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...secondaryColor)
-    doc.text('We appreciate your commitment to sustainable waste management', pageWidth / 2, footerY + 10, { align: 'center' })
-    
-    // Company contact information - better formatted
+    // Subtitle
     doc.setFontSize(9)
-    doc.setTextColor(...secondaryColor)
-    const contactText = `${String(companyInfo.address)} • ${String(companyInfo.phone)} • ${String(companyInfo.email)}`
-    doc.text(contactText, pageWidth / 2, footerY + 20, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...textGray)
+    doc.text('We appreciate your commitment to sustainable waste management', pageWidth / 2, footerY, { align: 'center' })
     
+    // Company contact information - well formatted
+    doc.setFontSize(8)
+    doc.setTextColor(...textGray)
+    const contactInfo = `${companyInfo.address}  •  ${companyInfo.phone}  •  ${companyInfo.email}`
+    doc.text(contactInfo, pageWidth / 2, footerY + 8, { align: 'center' })
+    
+    // Website
     if (companyInfo.website) {
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...primaryDark)
-      doc.text(String(companyInfo.website), pageWidth / 2, footerY + 28, { align: 'center' })
+      doc.setTextColor(...primaryGreen)
+      doc.setFontSize(9)
+      doc.text(companyInfo.website, pageWidth / 2, footerY + 16, { align: 'center' })
     }
-
-    // Security/Watermark text - more subtle
-    doc.setTextColor(180, 180, 180)
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'italic')
-    doc.text('This is a computer-generated receipt. No signature required.', pageWidth / 2, footerY + 36, { align: 'center' })
     
-    // Receipt ID in footer - better positioned
-    doc.setTextColor(...secondaryColor)
-    doc.setFontSize(8)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`Receipt ID: ${receiptId}`, margin, footerY + 36)
-    doc.setFont('helvetica', 'normal')
+    // Receipt metadata at bottom
     doc.setFontSize(7)
-    doc.text(`Generated: ${new Date().toLocaleString('en-NG')}`, pageWidth - margin, footerY + 36, { align: 'right' })
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...textGray)
+    doc.text(`Receipt ID: ${receiptId}`, margin, footerY + 26)
+    doc.text(`Generated: ${new Date().toLocaleString('en-NG')}`, pageWidth - margin, footerY + 26, { align: 'right' })
 
     return doc
   }

@@ -195,12 +195,12 @@ vercel
 
 1. **Update the base path in `vite.config.ts`** (if your repository name is different):
    ```typescript
-   base: process.env.GITHUB_PAGES ? '/your-repo-name/' : '/',
+   base: process.env.GITHUB_PAGES ? '/Cleanloop/' : '/',
    ```
 
 2. **Create a GitHub repository** (if you haven't already):
    ```bash
-   git remote add origin https://github.com/yourusername/cleanloop-platform.git
+   git remote add origin https://github.com/elpresidentey/Cleanloop.git
    git branch -M main
    git push -u origin main
    ```
@@ -219,7 +219,7 @@ vercel
      - `VITE_CONVEX_URL`
 
 5. **Your site will be available at**:
-   - `https://yourusername.github.io/cleanloop-platform/` (project page)
+   - `https://elpresidentey.github.io/Cleanloop/` (project page)
    - Or your custom domain if configured
 
 ## 📁 **Project Structure**

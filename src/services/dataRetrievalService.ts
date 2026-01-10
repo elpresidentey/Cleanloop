@@ -112,7 +112,10 @@ export class DataRetrievalService {
     pagination: PaginationOptions = { page: 1, limit: 20 },
     sort: SortOptions = { field: 'created_at', direction: 'desc' }
   ): Promise<PaginatedResponse<PickupRequest>> {
-    const offset = (pagination.page - 1) * pagination.limit
+    // Validate and limit pagination to prevent 400 errors
+    const safeLimit = Math.min(pagination.limit, 1000) // Max 1000 records per query
+    const safePage = Math.max(1, pagination.page)
+    const offset = (safePage - 1) * safeLimit
 
     // Build base query
     let query = supabase
@@ -152,7 +155,7 @@ export class DataRetrievalService {
     // Apply sorting and pagination
     query = query
       .order(sort.field, { ascending: sort.direction === 'asc' })
-      .range(offset, offset + pagination.limit - 1)
+      .range(offset, offset + safeLimit - 1)
 
     const { data, error, count } = await query
 
@@ -336,7 +339,10 @@ export class DataRetrievalService {
     pagination: PaginationOptions = { page: 1, limit: 20 },
     sort: SortOptions = { field: 'created_at', direction: 'desc' }
   ): Promise<PaginatedResponse<Complaint>> {
-    const offset = (pagination.page - 1) * pagination.limit
+    // Validate and limit pagination to prevent 400 errors
+    const safeLimit = Math.min(pagination.limit, 1000) // Max 1000 records per query
+    const safePage = Math.max(1, pagination.page)
+    const offset = (safePage - 1) * safeLimit
 
     let query = supabase
       .from('complaints')
@@ -371,7 +377,7 @@ export class DataRetrievalService {
     // Apply sorting and pagination
     query = query
       .order(sort.field, { ascending: sort.direction === 'asc' })
-      .range(offset, offset + pagination.limit - 1)
+      .range(offset, offset + safeLimit - 1)
 
     const { data, error, count } = await query
 
@@ -394,7 +400,10 @@ export class DataRetrievalService {
     pagination: PaginationOptions = { page: 1, limit: 20 },
     sort: SortOptions = { field: 'created_at', direction: 'desc' }
   ): Promise<PaginatedResponse<User>> {
-    const offset = (pagination.page - 1) * pagination.limit
+    // Validate and limit pagination to prevent 400 errors
+    const safeLimit = Math.min(pagination.limit, 1000) // Max 1000 records per query
+    const safePage = Math.max(1, pagination.page)
+    const offset = (safePage - 1) * safeLimit
 
     let query = supabase
       .from('users')
@@ -421,7 +430,7 @@ export class DataRetrievalService {
     // Apply sorting and pagination
     query = query
       .order(sort.field, { ascending: sort.direction === 'asc' })
-      .range(offset, offset + pagination.limit - 1)
+      .range(offset, offset + safeLimit - 1)
 
     const { data, error, count } = await query
 
@@ -463,7 +472,10 @@ export class DataRetrievalService {
     }
 
     const userIds = [...new Set(pickupData.map((p: any) => p.user_id))]
-    const offset = (pagination.page - 1) * pagination.limit
+    // Validate and limit pagination to prevent 400 errors
+    const safeLimit = Math.min(pagination.limit, 1000) // Max 1000 records per query
+    const safePage = Math.max(1, pagination.page)
+    const offset = (safePage - 1) * safeLimit
 
     // Build user query with filters
     let userQuery = supabase
@@ -486,7 +498,7 @@ export class DataRetrievalService {
 
     userQuery = userQuery
       .order(sort.field, { ascending: sort.direction === 'asc' })
-      .range(offset, offset + pagination.limit - 1)
+      .range(offset, offset + safeLimit - 1)
 
     const { data: users, error: usersError, count } = await userQuery
 
@@ -497,7 +509,7 @@ export class DataRetrievalService {
     if (!users || users.length === 0) {
       return {
         data: [],
-        pagination: this.calculatePagination(pagination.page, pagination.limit, count || 0)
+        pagination: this.calculatePagination(safePage, safeLimit, count || 0)
       }
     }
 

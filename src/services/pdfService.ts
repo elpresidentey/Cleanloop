@@ -57,7 +57,6 @@ export class PDFService {
     // Premium color palette
     const primaryColor: [number, number, number] = [16, 185, 129] // Emerald-500
     const primaryDark: [number, number, number] = [5, 150, 105] // Emerald-600
-    const primaryLight: [number, number, number] = [209, 250, 229] // Emerald-100
     const secondaryColor: [number, number, number] = [71, 85, 105] // Slate-600
     const lightGray: [number, number, number] = [248, 250, 252] // Slate-50
     const borderGray: [number, number, number] = [226, 232, 240] // Slate-200

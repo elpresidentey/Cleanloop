@@ -4,12 +4,22 @@ import { useAuth } from '../../hooks/useAuth'
 import { HeroSection } from '../common/HeroSection'
 import { SubscriptionService } from '../../services/subscriptionService'
 import { PickupService } from '../../services/pickupService'
+import { PaymentService } from '../../services/paymentService'
+import { ComplaintService } from '../../services/complaintService'
 import { Subscription, PickupRequest } from '../../types'
 
 interface DashboardData {
   subscription: Subscription | null
   nextPickup: PickupRequest | null
   recentPickups: PickupRequest[]
+  stats: {
+    totalPickups: number
+    completedPickups: number
+    pendingPickups: number
+    totalPayments: number
+    totalAmount: number
+    openComplaints: number
+  }
   loading: boolean
   error: string | null
 }
@@ -20,6 +30,14 @@ export const ResidentDashboard: React.FC = () => {
     subscription: null,
     nextPickup: null,
     recentPickups: [],
+    stats: {
+      totalPickups: 0,
+      completedPickups: 0,
+      pendingPickups: 0,
+      totalPayments: 0,
+      totalAmount: 0,
+      openComplaints: 0
+    },
     loading: true,
     error: null
   })
@@ -29,25 +47,42 @@ export const ResidentDashboard: React.FC = () => {
 
     const loadDashboardData = async () => {
       try {
-        setData(prev => ({ ...prev, loading: true, error: null }))
+        setData((prev: DashboardData) => ({ ...prev, loading: true, error: null }))
 
         // Load data in parallel for better performance
-        const [subscription, nextPickup, recentPickups] = await Promise.all([
+        const [subscription, nextPickup, recentPickups, allPickups, payments, complaints] = await Promise.all([
           SubscriptionService.getByUserId(profile.id),
           PickupService.getNextPickup(profile.id),
-          PickupService.getByUserId(profile.id, 5) // Get last 5 pickups
+          PickupService.getByUserId(profile.id, 5), // Get last 5 pickups
+          PickupService.getByUserId(profile.id, 100), // Get all for stats
+          PaymentService.getByUserId(profile.id),
+          ComplaintService.getByUserId(profile.id)
         ])
+
+        // Calculate statistics
+        const completedPickups = allPickups.filter(p => p.status === 'picked_up').length
+        const pendingPickups = allPickups.filter(p => p.status === 'requested' || p.status === 'scheduled').length
+        const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)
+        const openComplaints = complaints.filter(c => c.status !== 'resolved' && c.status !== 'closed').length
 
         setData({
           subscription,
           nextPickup,
           recentPickups,
+          stats: {
+            totalPickups: allPickups.length,
+            completedPickups,
+            pendingPickups,
+            totalPayments: payments.length,
+            totalAmount,
+            openComplaints
+          },
           loading: false,
           error: null
         })
       } catch (error) {
         console.error('Dashboard data loading error:', error)
-        setData(prev => ({
+        setData((prev: DashboardData) => ({
           ...prev,
           loading: false,
           error: 'Failed to load dashboard data'
@@ -95,7 +130,7 @@ export const ResidentDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-blue-50/30">
       {/* Hero Section */}
       <HeroSection 
         userName={profile.name}
@@ -103,12 +138,108 @@ export const ResidentDashboard: React.FC = () => {
       />
 
       <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 py-4 lg:py-8 overflow-x-hidden">
+        {/* Alert for Open Complaints */}
+        {!data.loading && data.stats.openComplaints > 0 && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm text-yellow-700">
+                  You have <strong>{data.stats.openComplaints}</strong> open {data.stats.openComplaints === 1 ? 'complaint' : 'complaints'}. 
+                  <Link to="/resident/complaints" className="ml-1 font-medium text-yellow-800 underline hover:text-yellow-900">
+                    View details →
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Statistics Cards - Modern Design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Pickups</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {data.loading ? '...' : data.stats.totalPickups}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {data.loading ? '...' : data.stats.completedPickups}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {data.loading ? '...' : data.stats.pendingPickups}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Paid</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {data.loading ? '...' : `₦${data.stats.totalAmount.toLocaleString()}`}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Subscription Status */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300">
+              <div className="px-6 py-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   Subscription Status
                 </h3>
@@ -153,22 +284,28 @@ export const ResidentDashboard: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500">No active subscription</p>
-                    <Link 
-                      to="/resident/subscription"
-                      className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    >
-                      Subscribe Now
-                    </Link>
+                  <div className="text-center py-8">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No active subscription</h3>
+                    <p className="mt-1 text-sm text-gray-500">Get started by subscribing to our service.</p>
+                    <div className="mt-6">
+                      <Link 
+                        to="/resident/subscription"
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        Subscribe Now
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Next Pickup */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300">
+              <div className="px-6 py-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   Next Pickup
                 </h3>
@@ -212,14 +349,20 @@ export const ResidentDashboard: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500">No upcoming pickups scheduled</p>
-                    <Link 
-                      to="/resident/pickup-requests"
-                      className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Request Pickup
-                    </Link>
+                  <div className="text-center py-8">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No upcoming pickups</h3>
+                    <p className="mt-1 text-sm text-gray-500">Schedule your first waste collection pickup.</p>
+                    <div className="mt-6">
+                      <Link 
+                        to="/resident/pickup-requests"
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        Request Pickup
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -229,8 +372,8 @@ export const ResidentDashboard: React.FC = () => {
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Account Information */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300">
+              <div className="px-6 py-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   Account Information
                 </h3>
@@ -255,8 +398,8 @@ export const ResidentDashboard: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300">
+              <div className="px-6 py-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   Quick Actions
                 </h3>
@@ -299,8 +442,8 @@ export const ResidentDashboard: React.FC = () => {
 
         {/* Recent Activity */}
         <div className="mt-8">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
+          <div className="bg-white/80 backdrop-blur-sm shadow-lg rounded-2xl border border-white/20">
+            <div className="px-6 py-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                 Recent Pickup Activity
               </h3>
@@ -312,7 +455,7 @@ export const ResidentDashboard: React.FC = () => {
               ) : data.recentPickups.length > 0 ? (
                 <div className="space-y-4">
                   {data.recentPickups.map((pickup) => (
-                    <div key={pickup.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={pickup.id} className="border border-gray-200 rounded-xl p-5 bg-white/50 backdrop-blur-sm hover:bg-white/80 hover:shadow-md transition-all duration-300">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
@@ -346,14 +489,20 @@ export const ResidentDashboard: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-500">No recent pickup activity</p>
-                  <Link 
-                    to="/resident/pickup-requests"
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-500"
-                  >
-                    Request your first pickup →
-                  </Link>
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
+                  <p className="mt-1 text-sm text-gray-500">Get started by requesting your first pickup.</p>
+                  <div className="mt-6">
+                    <Link 
+                      to="/resident/pickup-requests"
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Request Pickup
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

@@ -131,6 +131,17 @@ export class ComplaintService {
     return response.data
   }
 
+  static async delete(id: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('complaints')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      throw new Error(`Failed to delete complaint: ${error.message}`)
+    }
+  }
+
   private static mapRowToComplaint(row: any): Complaint {
     return {
       id: row.id,

@@ -161,7 +161,7 @@ export class DataRetrievalService {
     }
 
     const pickupRequests = (data || []).map(this.mapRowToPickupRequest)
-    const paginationInfo = this.calculatePagination(pagination.page, pagination.limit, count || 0)
+    const paginationInfo = this.calculatePagination(safePage, safeLimit, count || 0)
 
     return {
       data: pickupRequests,
@@ -175,7 +175,10 @@ export class DataRetrievalService {
     pagination: PaginationOptions = { page: 1, limit: 20 },
     sort: SortOptions = { field: 'created_at', direction: 'desc' }
   ): Promise<PaginatedResponse<Payment>> {
-    const offset = (pagination.page - 1) * pagination.limit
+    // Validate and limit pagination to prevent 400 errors
+    const safeLimit = Math.min(pagination.limit, 1000) // Max 1000 records per query
+    const safePage = Math.max(1, pagination.page)
+    const offset = (safePage - 1) * safeLimit
 
     let query = supabase
       .from('payments')
@@ -207,24 +210,119 @@ export class DataRetrievalService {
     }
 
     // Apply search across payment_reference field (handles both column naming conventions)
+    // Note: We'll search in payment_reference (new schema) only to avoid 400 errors
+    // If the column doesn't exist, the query will still work but won't filter
     if (filters.searchTerm) {
-      // Try to search in both reference and payment_reference columns
-      query = query.or(`payment_reference.ilike.%${filters.searchTerm}%,reference.ilike.%${filters.searchTerm}%`)
+      const searchPattern = `%${filters.searchTerm}%`
+      // Try payment_reference first (most common in new schema)
+      // If column doesn't exist, Supabase will return an error which we'll handle
+      query = query.ilike('payment_reference', searchPattern)
     }
 
-    // Apply sorting and pagination
+    // Apply sorting - ensure field name matches database column
+    const sortField = sort.field === 'createdAt' ? 'created_at' : sort.field
     query = query
-      .order(sort.field, { ascending: sort.direction === 'asc' })
-      .range(offset, offset + pagination.limit - 1)
+      .order(sortField, { ascending: sort.direction === 'asc' })
+      .range(offset, offset + safeLimit - 1)
 
-    const { data, error, count } = await query
+    // Execute query with error handling
+    console.log('Executing payments query with filters:', {
+      userId: filters.userId,
+      limit: safeLimit,
+      page: safePage,
+      offset,
+      sortField: sort.field === 'createdAt' ? 'created_at' : sort.field
+    })
+    
+    let result
+    try {
+      result = await query
+    } catch (queryError: any) {
+      console.error('Query execution error:', queryError)
+      throw new Error(`Query execution failed: ${queryError.message || 'Unknown error'}`)
+    }
+
+    const { data, error, count } = result
 
     if (error) {
+      console.error('DataRetrievalService.getPayments error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      
+      // If error is about payment_reference column not found, try with reference column
+      if (error.code === '42703' || error.message?.includes('payment_reference') || error.message?.includes('column') && filters.searchTerm) {
+        console.log('Retrying query with "reference" column instead of "payment_reference"')
+        
+        // Retry without search or with reference column
+        let retryQuery = supabase
+          .from('payments')
+          .select('*', { count: 'exact' })
+        
+        if (filters.userId) {
+          retryQuery = retryQuery.eq('user_id', filters.userId)
+        }
+        
+        if (filters.searchTerm) {
+          retryQuery = retryQuery.ilike('reference', `%${filters.searchTerm}%`)
+        }
+        
+        const sortField = sort.field === 'createdAt' ? 'created_at' : sort.field
+        const retryResult = await retryQuery
+          .order(sortField, { ascending: sort.direction === 'asc' })
+          .range(offset, offset + safeLimit - 1)
+        
+        if (retryResult.error) {
+          // Still failing, throw original error
+          throw new Error(`Failed to fetch payments: ${error.message}`)
+        }
+        
+        // Success with retry
+        const payments = (retryResult.data || []).map((row: any) => {
+          try {
+            return this.mapRowToPayment(row)
+          } catch (mapError) {
+            console.error('Error mapping payment row:', row, mapError)
+            throw mapError
+          }
+        })
+        
+        const paginationInfo = this.calculatePagination(safePage, safeLimit, retryResult.count || 0)
+        
+        return {
+          data: payments,
+          pagination: paginationInfo
+        }
+      }
+      
+      // Provide more helpful error messages
+      if (error.code === 'PGRST204') {
+        throw new Error(`Database schema issue: ${error.message}. Please check if the payments table exists and has the correct columns.`)
+      } else if (error.code === '42703') {
+        throw new Error(`Column not found: ${error.message}. The database schema may have changed.`)
+      } else if (error.message?.includes('JWT')) {
+        throw new Error('Authentication error. Please log in again.')
+      }
+      
       throw new Error(`Failed to fetch payments: ${error.message}`)
     }
 
-    const payments = (data || []).map(this.mapRowToPayment)
-    const paginationInfo = this.calculatePagination(pagination.page, pagination.limit, count || 0)
+    console.log('DataRetrievalService.getPayments raw data:', { data, count, error })
+    
+    const payments = (data || []).map((row: any) => {
+      try {
+        return this.mapRowToPayment(row)
+      } catch (mapError) {
+        console.error('Error mapping payment row:', row, mapError)
+        throw mapError
+      }
+    })
+    
+    console.log('DataRetrievalService.getPayments mapped payments:', payments.length)
+    
+    const paginationInfo = this.calculatePagination(safePage, safeLimit, count || 0)
 
     return {
       data: payments,
@@ -282,7 +380,7 @@ export class DataRetrievalService {
     }
 
     const complaints = (data || []).map(this.mapRowToComplaint)
-    const paginationInfo = this.calculatePagination(pagination.page, pagination.limit, count || 0)
+    const paginationInfo = this.calculatePagination(safePage, safeLimit, count || 0)
 
     return {
       data: complaints,
@@ -332,7 +430,7 @@ export class DataRetrievalService {
     }
 
     const users = (data || []).map(this.mapRowToUser)
-    const paginationInfo = this.calculatePagination(pagination.page, pagination.limit, count || 0)
+    const paginationInfo = this.calculatePagination(safePage, safeLimit, count || 0)
 
     return {
       data: users,
@@ -468,7 +566,7 @@ export class DataRetrievalService {
       }
     })
 
-    const paginationInfo = this.calculatePagination(pagination.page, pagination.limit, count || 0)
+    const paginationInfo = this.calculatePagination(safePage, safeLimit, count || 0)
 
     return {
       data: customerDetails,

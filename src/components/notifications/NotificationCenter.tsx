@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-// import { api } from '../../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  notifications: {
-    getNotifications: 'notifications:getNotifications',
-    markAsRead: 'notifications:markAsRead',
-    markAllAsRead: 'notifications:markAllAsRead'
-  }
-} as any;
+import { api } from '../../lib/convex';
 import { useAuth } from '../../hooks/useAuth';
 
 interface Notification {
@@ -27,7 +19,7 @@ export const NotificationCenter: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   
   // Real-time subscription to user notifications
-  const notifications = useQuery(api.notifications.getUserNotifications, 
+  const notifications = useQuery(api.notifications.getUserNotifications as any, 
     user ? { 
       userId: user.id, 
       unreadOnly: !showAll,
@@ -35,12 +27,12 @@ export const NotificationCenter: React.FC = () => {
     } : 'skip'
   );
   
-  const unreadCount = useQuery(api.notifications.getUnreadNotificationCount,
+  const unreadCount = useQuery(api.notifications.getUnreadNotificationCount as any,
     user ? { userId: user.id } : 'skip'
   );
   
-  const markAsRead = useMutation(api.notifications.markNotificationAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead);
+  const markAsRead = useMutation(api.notifications.markNotificationAsRead as any);
+  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead as any);
 
   const handleMarkAsRead = async (notificationId: string) => {
     if (!user) return;

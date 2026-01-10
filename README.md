@@ -11,7 +11,8 @@
 
 ## 🚀 **Live Demo**
 
-**Development Server:** `http://localhost:3000` (after setup)
+**Development Server:** `http://localhost:5173` (after setup)
+**GitHub Pages:** Available after deployment (configure in repository settings)
 
 ## ✨ **Features**
 
@@ -189,6 +190,37 @@ npm run preview
 npm install -g vercel
 vercel
 ```
+
+### **Deploy to GitHub Pages**
+
+1. **Update the base path in `vite.config.ts`** (if your repository name is different):
+   ```typescript
+   base: process.env.GITHUB_PAGES ? '/your-repo-name/' : '/',
+   ```
+
+2. **Create a GitHub repository** (if you haven't already):
+   ```bash
+   git remote add origin https://github.com/yourusername/cleanloop-platform.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. **Enable GitHub Pages**:
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Pages**
+   - Under **Source**, select **GitHub Actions**
+   - The deployment will run automatically on every push to `main` branch
+
+4. **Add GitHub Secrets** (optional, for production environment variables):
+   - Go to **Settings** → **Secrets and variables** → **Actions**
+   - Add secrets:
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+     - `VITE_CONVEX_URL`
+
+5. **Your site will be available at**:
+   - `https://yourusername.github.io/cleanloop-platform/` (project page)
+   - Or your custom domain if configured
 
 ## 📁 **Project Structure**
 

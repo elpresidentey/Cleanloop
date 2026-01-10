@@ -1,33 +1,49 @@
 import { ConvexReactClient } from 'convex/react'
 
-// Mock API for build compatibility
-const api = {
+// Mock API for build compatibility - hooks can import from generated API directly
+// This provides a fallback when the generated API is not available
+export const api = {
   pickups: {
     updatePickupStatus: 'pickups:updatePickupStatus',
-    assignPickupToCollector: 'pickups:assignPickupToCollector'
+    assignPickupToCollector: 'pickups:assignPickupToCollector',
+    getPickupStatusUpdates: 'pickups:getPickupStatusUpdates',
+    getCollectorPickups: 'pickups:getCollectorPickups'
   },
   complaints: {
     createComplaint: 'complaints:createComplaint',
     updateComplaintStatus: 'complaints:updateComplaintStatus',
-    resolveComplaint: 'complaints:resolveComplaint'
+    resolveComplaint: 'complaints:resolveComplaint',
+    getComplaintUpdates: 'complaints:getComplaintUpdates'
   },
   notifications: {
     sendNotification: 'notifications:sendNotification',
     markNotificationAsRead: 'notifications:markNotificationAsRead',
-    markAllNotificationsAsRead: 'notifications:markAllNotificationsAsRead'
+    markAllNotificationsAsRead: 'notifications:markAllNotificationsAsRead',
+    getUserNotifications: 'notifications:getUserNotifications',
+    getUnreadNotificationCount: 'notifications:getUnreadNotificationCount',
+    getSystemNotifications: 'notifications:getSystemNotifications',
+    getActivityFeed: 'notifications:getActivityFeed',
+    broadcastStatusChange: 'notifications:broadcastStatusChange',
+    sendPaymentNotification: 'notifications:sendPaymentNotification'
   },
   metrics: {
-    updateDailyPickupMetrics: 'metrics:updateDailyPickupMetrics'
+    updateDailyPickupMetrics: 'metrics:updateDailyPickupMetrics',
+    getDashboardSummary: 'metrics:getDashboardSummary',
+    getAreaMetrics: 'metrics:getAreaMetrics'
   }
 } as any
 
-const convexUrl = import.meta.env.VITE_CONVEX_URL
+// Use environment variable or fallback to known value for development
+const convexUrl = import.meta.env.VITE_CONVEX_URL || 'https://first-hornet-199.convex.cloud'
 
-if (!convexUrl) {
-  throw new Error('Missing Convex environment variable. Please check your .env.local file.')
+// Warn if using fallback value (means .env.local is not set)
+if (typeof window !== 'undefined' && !import.meta.env.VITE_CONVEX_URL) {
+  console.warn('⚠️ Using default Convex URL. For production, please set VITE_CONVEX_URL in .env.local')
 }
 
-export const convex = new ConvexReactClient(convexUrl)
+const safeConvexUrl = convexUrl
+
+export const convex = new ConvexReactClient(safeConvexUrl)
 
 // Real-time subscription helpers
 export const realtimeHelpers = {

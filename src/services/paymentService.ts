@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { Payment, CreatePaymentInput } from '../types'
+import { Payment, CreatePaymentInput, UpdatePaymentInput } from '../types'
 import { Database } from '../types/database'
 import { DataRetrievalService, PaymentFilters, PaginationOptions, SortOptions } from './dataRetrievalService'
 import { PDFService, ReceiptData } from './pdfService'
@@ -17,11 +17,18 @@ export class PaymentService {
   }
 
   static async getByUserId(userId: string, limit?: number): Promise<Payment[]> {
-    const response = await DataRetrievalService.getPayments(
-      { userId },
-      { page: 1, limit: limit || 20 }
-    )
-    return response.data
+    try {
+      console.log('PaymentService.getByUserId called with:', { userId, limit: limit || 1000 })
+      const response = await DataRetrievalService.getPayments(
+        { userId },
+        { page: 1, limit: limit || 1000 } // Increased default limit to 1000
+      )
+      console.log('PaymentService.getByUserId response:', response)
+      return response.data || []
+    } catch (error) {
+      console.error('PaymentService.getByUserId error:', error)
+      throw error
+    }
   }
 
   /**
@@ -198,6 +205,62 @@ export class PaymentService {
     }
 
     PDFService.printReceiptPDF(receiptData)
+  }
+
+  static async update(id: string, input: UpdatePaymentInput): Promise<Payment> {
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    }
+
+    if (input.amount !== undefined) {
+      updateData.amount = input.amount
+    }
+
+    if (input.currency !== undefined) {
+      updateData.currency = input.currency
+    }
+
+    if (input.paymentMethod !== undefined) {
+      updateData.payment_method = input.paymentMethod
+    }
+
+    if (input.reference !== undefined) {
+      // Try both column names
+      updateData.payment_reference = input.reference
+      updateData.reference = input.reference
+    }
+
+    if (input.status !== undefined) {
+      updateData.status = input.status
+    }
+
+    if (input.metadata !== undefined) {
+      updateData.metadata = input.metadata
+    }
+
+    const { data, error } = await (supabase as any)
+      .from('payments')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to update payment: ${error.message}`)
+    }
+
+    return this.mapRowToPayment(data)
+  }
+
+  static async delete(id: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('payments')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      throw new Error(`Failed to delete payment: ${error.message}`)
+    }
   }
 
   // Legacy text receipt method (kept for backward compatibility)

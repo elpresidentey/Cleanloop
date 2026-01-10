@@ -190,6 +190,15 @@ export const CreatePaymentSchema = z.object({
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional()
 })
 
+export const UpdatePaymentSchema = z.object({
+  amount: z.number().positive('Amount must be positive').optional(),
+  currency: z.string().length(3, 'Currency must be 3 characters (e.g., NGN)').optional(),
+  paymentMethod: PaymentMethodSchema.optional(),
+  reference: z.string().min(1, 'Payment reference is required').optional(),
+  status: PaymentStatusSchema.optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional()
+})
+
 // Complaint types
 export type ComplaintStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type ComplaintPriority = 'low' | 'medium' | 'high'
@@ -244,6 +253,7 @@ export type CreateSubscriptionInput = z.infer<typeof CreateSubscriptionSchema>
 export type CreatePickupRequestInput = z.infer<typeof CreatePickupRequestSchema>
 export type UpdatePickupStatusInput = z.infer<typeof UpdatePickupStatusSchema>
 export type CreatePaymentInput = z.infer<typeof CreatePaymentSchema>
+export type UpdatePaymentInput = z.infer<typeof UpdatePaymentSchema>
 export type CreateComplaintInput = z.infer<typeof CreateComplaintSchema>
 export type UpdateComplaintInput = z.infer<typeof UpdateComplaintSchema>
 

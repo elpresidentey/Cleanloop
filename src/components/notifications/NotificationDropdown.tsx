@@ -1,13 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-// import { api } from '../../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  notifications: {
-    getNotifications: 'notifications:getNotifications',
-    markAsRead: 'notifications:markAsRead'
-  }
-} as any;
+import { api } from '../../lib/convex';
 import { useAuth } from '../../hooks/useAuth';
 
 interface NotificationDropdownProps {
@@ -30,7 +23,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onCl
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Real-time subscription to recent notifications
-  const notifications = useQuery(api.notifications.getUserNotifications, 
+  const notifications = useQuery(api.notifications.getUserNotifications as any, 
     user ? { 
       userId: user.id, 
       unreadOnly: false,
@@ -38,8 +31,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onCl
     } : 'skip'
   );
   
-  const markAsRead = useMutation(api.notifications.markNotificationAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead);
+  const markAsRead = useMutation(api.notifications.markNotificationAsRead as any);
+  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead as any);
 
   // Close dropdown when clicking outside
   useEffect(() => {

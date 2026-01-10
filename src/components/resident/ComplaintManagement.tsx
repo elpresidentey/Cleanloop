@@ -11,6 +11,7 @@ export const ComplaintManagement: React.FC = () => {
   const [pickups, setPickups] = useState<Record<string, PickupRequest>>({})
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null)
   const [showComplaintForm, setShowComplaintForm] = useState(false)
+  const [deletingComplaint, setDeletingComplaint] = useState<Complaint | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,6 +52,30 @@ export const ComplaintManagement: React.FC = () => {
       ComplaintService.getByUserId(user.id)
         .then(setComplaints)
         .catch(console.error)
+    }
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent, complaint: Complaint) => {
+    e.stopPropagation() // Prevent triggering the card click
+    setDeletingComplaint(complaint)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingComplaint) return
+
+    try {
+      await ComplaintService.delete(deletingComplaint.id)
+      setDeletingComplaint(null)
+      setSelectedComplaint(null)
+      
+      // Reload complaints
+      if (user) {
+        const userComplaints = await ComplaintService.getByUserId(user.id)
+        setComplaints(userComplaints)
+      }
+    } catch (error) {
+      console.error('Failed to delete complaint:', error)
+      alert('Failed to delete complaint. Please try again.')
     }
   }
 
@@ -218,6 +243,22 @@ export const ComplaintManagement: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteClick(e, selectedComplaint)
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Complaint
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -281,11 +322,10 @@ export const ComplaintManagement: React.FC = () => {
             {complaints.map((complaint) => (
               <div
                 key={complaint.id}
-                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => setSelectedComplaint(complaint)}
+                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 cursor-pointer" onClick={() => setSelectedComplaint(complaint)}>
                     <div className="flex items-center space-x-2 mb-2">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
                         {complaint.status.replace('_', ' ').toUpperCase()}
@@ -313,10 +353,21 @@ export const ComplaintManagement: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                  <div className="ml-4 flex items-center space-x-2">
+                    <button
+                      onClick={(e) => handleDeleteClick(e, complaint)}
+                      className="opacity-0 group-hover:opacity-100 inline-flex items-center text-red-600 hover:text-red-900 transition-opacity"
+                      title="Delete Complaint"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <div onClick={() => setSelectedComplaint(complaint)} className="cursor-pointer">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -324,6 +375,49 @@ export const ComplaintManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deletingComplaint && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mt-5">
+                Delete Complaint
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete this complaint? This action cannot be undone.
+                </p>
+                <p className="text-sm font-medium text-gray-900 mt-2">
+                  Status: {deletingComplaint.status.replace('_', ' ').toUpperCase()}
+                </p>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                  {deletingComplaint.description}
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setDeletingComplaint(null)}
+                  className="mt-3 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

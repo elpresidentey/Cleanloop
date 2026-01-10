@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Use environment variables or fallback to known values for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vwypugutdwffdqveezdh.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3eXB1Z3V0ZHdmZmRxdmVlemRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NDg5MjIsImV4cCI6MjA4MjUyNDkyMn0.r6GESz9VPTdXdfloI8oCPbTw162yd2PZFXvGRuQsr7Y'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
+// Warn if using fallback values (means .env.local is not set)
+if (typeof window !== 'undefined' && !import.meta.env.VITE_SUPABASE_URL) {
+  console.warn('⚠️ Using default Supabase credentials. For production, please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local')
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {

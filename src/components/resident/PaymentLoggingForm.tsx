@@ -1,18 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { PaymentService } from '../../services/paymentService'
-import { CreatePaymentInput, PaymentMethod } from '../../types'
+import { CreatePaymentInput, PaymentMethod, Payment, UpdatePaymentInput } from '../../types'
 
 interface PaymentLoggingFormProps {
   onSuccess?: () => void
   onCancel?: () => void
+  initialData?: Payment | null
 }
 
 export const PaymentLoggingForm: React.FC<PaymentLoggingFormProps> = ({
   onSuccess,
-  onCancel
+  onCancel,
+  initialData
 }) => {
   const { user } = useAuth()
+  const isEditMode = !!initialData
   const [formData, setFormData] = useState({
     amount: '',
     paymentMethod: 'cash' as PaymentMethod,
@@ -21,6 +24,17 @@ export const PaymentLoggingForm: React.FC<PaymentLoggingFormProps> = ({
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        amount: initialData.amount.toString(),
+        paymentMethod: initialData.paymentMethod,
+        reference: initialData.reference,
+        notes: initialData.metadata?.notes as string || ''
+      })
+    }
+  }, [initialData])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -54,24 +68,35 @@ export const PaymentLoggingForm: React.FC<PaymentLoggingFormProps> = ({
       setSubmitting(true)
       setError(null)
 
-      const paymentInput: CreatePaymentInput = {
-        userId: user.id,
-        amount,
-        currency: 'NGN',
-        paymentMethod: formData.paymentMethod,
-        reference: formData.reference.trim(),
-        metadata: formData.notes.trim() ? { notes: formData.notes.trim() } : undefined
+      if (isEditMode && initialData) {
+        const updateInput: UpdatePaymentInput = {
+          amount,
+          paymentMethod: formData.paymentMethod,
+          reference: formData.reference.trim(),
+          metadata: formData.notes.trim() ? { notes: formData.notes.trim() } : undefined
+        }
+        await PaymentService.update(initialData.id, updateInput)
+      } else {
+        const paymentInput: CreatePaymentInput = {
+          userId: user.id,
+          amount,
+          currency: 'NGN',
+          paymentMethod: formData.paymentMethod,
+          reference: formData.reference.trim(),
+          metadata: formData.notes.trim() ? { notes: formData.notes.trim() } : undefined
+        }
+        await PaymentService.create(paymentInput)
       }
-
-      await PaymentService.create(paymentInput)
       
       // Reset form
-      setFormData({
-        amount: '',
-        paymentMethod: 'cash',
-        reference: '',
-        notes: ''
-      })
+      if (!isEditMode) {
+        setFormData({
+          amount: '',
+          paymentMethod: 'cash',
+          reference: '',
+          notes: ''
+        })
+      }
 
       if (onSuccess) {
         onSuccess()
@@ -88,7 +113,7 @@ export const PaymentLoggingForm: React.FC<PaymentLoggingFormProps> = ({
     <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
       <div className="px-8 py-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">
-          Log Payment
+          {isEditMode ? 'Edit Payment' : 'Log Payment'}
         </h3>
 
         {error && (
@@ -191,7 +216,7 @@ export const PaymentLoggingForm: React.FC<PaymentLoggingFormProps> = ({
               disabled={submitting}
               className="px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Logging...' : 'Log Payment'}
+              {submitting ? (isEditMode ? 'Updating...' : 'Logging...') : (isEditMode ? 'Update Payment' : 'Log Payment')}
             </button>
           </div>
         </form>

@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from 'convex/react';
-// import { api } from '../../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  pickups: {
-    getPickupUpdates: 'pickups:getPickupUpdates'
-  },
-  complaints: {
-    getComplaintUpdates: 'complaints:getComplaintUpdates'
-  }
-} as any;
+import { api } from '../../lib/convex';
 import { useAuth } from '../../hooks/useAuth';
 
 interface StatusUpdate {
@@ -44,7 +35,7 @@ export const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
   const [newUpdatesCount, setNewUpdatesCount] = useState(0);
 
   // Real-time subscription to pickup status updates
-  const statusUpdates = useQuery(api.pickups.getPickupStatusUpdates,
+  const statusUpdates = useQuery(api.pickups.getPickupStatusUpdates as any,
     user ? {
       userId: user.role === 'resident' ? user.id : undefined,
       collectorId: user.role === 'collector' ? (collectorId || user.id) : collectorId,

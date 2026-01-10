@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
-// import { api } from '../../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  notifications: {
-    getNotifications: 'notifications:getNotifications',
-    markAsRead: 'notifications:markAsRead'
-  }
-} as any;
+import { api } from '../../lib/convex';
 import { useAuth } from '../../hooks/useAuth';
 
 interface ActivityItem {
@@ -37,7 +30,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   const [selectedEntityType, setSelectedEntityType] = useState<string>(entityType || '');
 
   // Real-time subscription to activity feed
-  const activities = useQuery(api.notifications.getActivityFeed, 
+  const activities = useQuery(api.notifications.getActivityFeed as any, 
     user ? {
       userId: user.role === 'admin' ? undefined : user.id,
       entityType: selectedEntityType || undefined,

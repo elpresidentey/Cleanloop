@@ -202,6 +202,51 @@ export class PickupService {
     return this.mapRowToPickupRequest(data)
   }
 
+  static async update(id: string, input: Partial<CreatePickupRequestInput>): Promise<PickupRequest> {
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    }
+
+    if (input.scheduledDate) {
+      updateData.scheduled_date = input.scheduledDate.toISOString().split('T')[0]
+    }
+
+    if (input.notes !== undefined) {
+      updateData.notes = input.notes || null
+    }
+
+    if (input.location) {
+      const safeArea = this.getSafeValue(input.location.area, 'Lagos Island')
+      const safeStreet = this.getSafeValue(input.location.street, 'Marina Street')
+      const safeHouseNumber = this.getSafeValue(input.location.houseNumber, '123')
+      updateData.pickup_address = `${safeHouseNumber} ${safeStreet}, ${safeArea}`
+    }
+
+    const { data, error } = await (supabase as any)
+      .from('pickup_requests')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to update pickup request: ${error.message}`)
+    }
+
+    return this.mapRowToPickupRequest(data)
+  }
+
+  static async delete(id: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('pickup_requests')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      throw new Error(`Failed to delete pickup request: ${error.message}`)
+    }
+  }
+
   private static mapRowToPickupRequest(row: PickupRequestRow): PickupRequest {
     // Parse address back to location components (basic parsing)
     const addressParts = (row.notes || '').split(', ')

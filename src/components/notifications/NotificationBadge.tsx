@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
-// import { api } from '../../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  notifications: {
-    getUnreadCount: 'notifications:getUnreadCount'
-  }
-} as any;
+import { api } from '../../lib/convex';
 import { useAuth } from '../../hooks/useAuth';
 import { NotificationDropdown } from './NotificationDropdown';
 
@@ -15,7 +9,7 @@ export const NotificationBadge: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   
   // Real-time subscription to unread count
-  const unreadCount = useQuery(api.notifications.getUnreadNotificationCount,
+  const unreadCount = useQuery(api.notifications.getUnreadNotificationCount as any,
     user ? { userId: user.id } : 'skip'
   );
 

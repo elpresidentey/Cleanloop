@@ -1,38 +1,33 @@
 import { useQuery, useMutation } from 'convex/react';
-// import { api } from '../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  notifications: {
-    getNotifications: 'notifications:getNotifications',
-    markAsRead: 'notifications:markAsRead',
-    markAllAsRead: 'notifications:markAllAsRead'
-  }
-} as any
+import { api } from '../lib/convex';
 import { useAuth } from './useAuth';
 import { useCallback } from 'react';
 
 export const useNotifications = () => {
   const { user } = useAuth();
 
-  // Real-time queries
-  const notifications = useQuery(api.notifications.getUserNotifications, 
+  // Real-time queries - using string literals for compatibility
+  const notifications = useQuery(
+    api.notifications.getUserNotifications as any, 
     user ? { userId: user.id, unreadOnly: false, limit: 50 } : 'skip'
   );
   
-  const unreadCount = useQuery(api.notifications.getUnreadNotificationCount,
+  const unreadCount = useQuery(
+    api.notifications.getUnreadNotificationCount as any,
     user ? { userId: user.id } : 'skip'
   );
 
-  const systemNotifications = useQuery(api.notifications.getSystemNotifications,
+  const systemNotifications = useQuery(
+    api.notifications.getSystemNotifications as any,
     user?.role === 'admin' ? { limit: 100, hours: 24 } : 'skip'
   );
 
   // Mutations
-  const sendNotification = useMutation(api.notifications.sendNotification);
-  const markAsRead = useMutation(api.notifications.markNotificationAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead);
-  const broadcastStatusChange = useMutation(api.notifications.broadcastStatusChange);
-  const sendPaymentNotification = useMutation(api.notifications.sendPaymentNotification);
+  const sendNotification = useMutation(api.notifications.sendNotification as any);
+  const markAsRead = useMutation(api.notifications.markNotificationAsRead as any);
+  const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead as any);
+  const broadcastStatusChange = useMutation(api.notifications.broadcastStatusChange as any);
+  const sendPaymentNotification = useMutation(api.notifications.sendPaymentNotification as any);
 
   // Helper functions
   const markNotificationAsRead = useCallback(async (notificationId: string) => {

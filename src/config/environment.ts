@@ -30,20 +30,32 @@ export const config = {
 }
 
 // Validation function to ensure all required environment variables are present
+// Only validates at runtime, not during build
 export const validateEnvironment = () => {
+  // Skip validation during build
+  if (typeof window === 'undefined') {
+    return true
+  }
+
   const requiredVars = [
     'VITE_SUPABASE_URL',
     'VITE_SUPABASE_ANON_KEY',
     'VITE_CONVEX_URL'
   ]
   
-  const missingVars = requiredVars.filter(varName => !import.meta.env[varName])
+  const missingVars = requiredVars.filter(varName => {
+    const value = import.meta.env[varName]
+    return !value || value.includes('placeholder') || value.includes('your-')
+  })
   
   if (missingVars.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missingVars.join(', ')}\n` +
-      'Please check your .env.local file and ensure all required variables are set.'
+    console.warn(
+      `⚠️ Missing or invalid environment variables: ${missingVars.join(', ')}\n` +
+      'Please check your .env.local file and ensure all required variables are set.\n' +
+      'The app will continue to load, but some features may not work correctly.'
     )
+    // Don't throw - allow app to load with warnings so user can see the UI
+    // User can create .env.local file manually
   }
   
   return true

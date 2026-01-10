@@ -1,14 +1,5 @@
 import { useQuery, useMutation } from 'convex/react';
-// import { api } from '../convex/_generated/api'
-// Mock API for build compatibility
-const api = {
-  pickups: {
-    getPickupUpdates: 'pickups:getPickupUpdates'
-  },
-  complaints: {
-    getComplaintUpdates: 'complaints:getComplaintUpdates'
-  }
-} as any
+import { api } from '../lib/convex';
 import { useAuth } from './useAuth';
 import { useCallback } from 'react';
 
@@ -16,7 +7,7 @@ export const useRealTimeUpdates = () => {
   const { user } = useAuth();
 
   // Real-time queries for different user roles
-  const pickupUpdates = useQuery(api.pickups.getPickupStatusUpdates, 
+  const pickupUpdates = useQuery(api.pickups.getPickupStatusUpdates as any, 
     user ? {
       userId: user.role === 'resident' ? user.id : undefined,
       collectorId: user.role === 'collector' ? user.id : undefined,
@@ -24,7 +15,7 @@ export const useRealTimeUpdates = () => {
     } : 'skip'
   );
 
-  const complaintUpdates = useQuery(api.complaints.getComplaintUpdates,
+  const complaintUpdates = useQuery(api.complaints.getComplaintUpdates as any,
     user ? {
       userId: user.role === 'resident' ? user.id : undefined,
       adminId: user.role === 'admin' ? user.id : undefined,
@@ -32,7 +23,7 @@ export const useRealTimeUpdates = () => {
     } : 'skip'
   );
 
-  const recentPickupActivity = useQuery(api.pickups.getRecentPickupActivity,
+  const recentPickupActivity = useQuery(api.pickups.getPickupStatusUpdates as any,
     user ? {
       userId: user.role === 'resident' ? user.id : undefined,
       collectorId: user.role === 'collector' ? user.id : undefined,
@@ -40,22 +31,22 @@ export const useRealTimeUpdates = () => {
     } : 'skip'
   );
 
-  const recentComplaintActivity = useQuery(api.complaints.getRecentComplaintActivity,
+  const recentComplaintActivity = useQuery(api.complaints.getComplaintUpdates as any,
     user?.role === 'admin' ? { hours: 24 } : 'skip'
   );
 
-  const collectorPickups = useQuery(api.pickups.getCollectorPickups,
+  const collectorPickups = useQuery(api.pickups.getCollectorPickups as any,
     user?.role === 'collector' ? { 
       collectorId: user.id,
       date: new Date().toISOString().split('T')[0]
     } : 'skip'
   );
 
-  const complaintsForAdmin = useQuery(api.complaints.getComplaintsForAdmin,
+  const complaintsForAdmin = useQuery(api.complaints.getComplaintUpdates as any,
     user?.role === 'admin' ? {} : 'skip'
   );
 
-  const activityFeed = useQuery(api.notifications.getActivityFeed,
+  const activityFeed = useQuery(api.notifications.getActivityFeed as any,
     user ? {
       userId: user.role === 'admin' ? undefined : user.id,
       limit: 50,
@@ -64,11 +55,11 @@ export const useRealTimeUpdates = () => {
   );
 
   // Mutations
-  const updatePickupStatus = useMutation(api.pickups.updatePickupStatus);
-  const assignPickupToCollector = useMutation(api.pickups.assignPickupToCollector);
-  const createComplaint = useMutation(api.complaints.createComplaint);
-  const updateComplaintStatus = useMutation(api.complaints.updateComplaintStatus);
-  const resolveComplaint = useMutation(api.complaints.resolveComplaint);
+  const updatePickupStatus = useMutation(api.pickups.updatePickupStatus as any);
+  const assignPickupToCollector = useMutation(api.pickups.assignPickupToCollector as any);
+  const createComplaint = useMutation(api.complaints.createComplaint as any);
+  const updateComplaintStatus = useMutation(api.complaints.updateComplaintStatus as any);
+  const resolveComplaint = useMutation(api.complaints.resolveComplaint as any);
 
   // Helper functions
   const updatePickupStatusWithNotification = useCallback(async (

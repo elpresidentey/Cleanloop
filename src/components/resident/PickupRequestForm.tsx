@@ -1,21 +1,24 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { PickupService } from '../../services/pickupService'
-import { CreatePickupRequestInput } from '../../types'
+import { CreatePickupRequestInput, PickupRequest } from '../../types'
 
 interface PickupRequestFormProps {
+  pickup?: PickupRequest
   onSuccess?: () => void
   onCancel?: () => void
 }
 
 export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
+  pickup,
   onSuccess,
   onCancel
 }) => {
   const { profile } = useAuth()
+  const isEditing = !!pickup
   const [formData, setFormData] = useState({
-    scheduledDate: '',
-    notes: ''
+    scheduledDate: pickup ? new Date(pickup.scheduledDate).toISOString().split('T')[0] : '',
+    notes: pickup?.notes || ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,7 +72,11 @@ export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
 
       console.log('🚀 SUBMITTING PICKUP REQUEST:', requestInput)
 
-      await PickupService.create(requestInput)
+      if (isEditing && pickup) {
+        await PickupService.update(pickup.id, requestInput)
+      } else {
+        await PickupService.create(requestInput)
+      }
       
       // Reset form
       setFormData({
@@ -100,10 +107,10 @@ export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
   const minDate = tomorrow.toISOString().split('T')[0]
 
   return (
-    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden border border-white/20">
       <div className="px-8 py-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
-          Request Pickup
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
+          {isEditing ? 'Edit Pickup Request' : 'Request Pickup'}
         </h3>
 
         {error && (
@@ -188,9 +195,9 @@ export const PickupRequestForm: React.FC<PickupRequestFormProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+              className="px-6 py-3 border border-transparent text-sm font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-all duration-200 transform hover:scale-105 disabled:transform-none"
             >
-              {submitting ? 'Submitting...' : 'Request Pickup'}
+              {submitting ? (isEditing ? 'Updating...' : 'Submitting...') : (isEditing ? 'Update Pickup' : 'Request Pickup')}
             </button>
           </div>
         </form>
